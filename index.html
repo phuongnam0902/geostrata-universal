@@ -451,11 +451,11 @@
       constructor() {
         this.cvs = document.getElementById('isometric-canvas');
         this.ctx = this.cvs.getContext('2d');
-        // Render ở độ phân giải hợp lý cho Inset (800x600)
-        this.cvs.width = 800; this.cvs.height = 600;
+        this.cvs.width = 1200; this.cvs.height = 900; // Render to hơn để nét khi thu nhỏ CSS
         this.preset = DB.cuu_long;
         this.normProfile = new Array(60).fill(0.5);
-        this.W = 400; this.D = 200;
+        this.cfg = { ve: 2.5, tex: true, badge: true, water: true, oil: true };
+        this.W = 600; this.D = 300;
         this.hitZones = [];
         this.selectedLayer = -1;
         this.hoveredLayer = -1;
@@ -480,27 +480,42 @@
 
       iso(x, y, z) {
         const aX = Math.PI/6, aZ = 5*Math.PI/6;
-        return { x: 400 + x * Math.cos(aX) + z * Math.cos(aZ), y: 150 + y + x * Math.sin(aX) + z * Math.sin(aZ) };
+        return { x: 600 + x * Math.cos(aX) + z * Math.cos(aZ), y: 150 + y + x * Math.sin(aX) + z * Math.sin(aZ) };
       }
 
-      drawF(pts, clr, type, idx) {
+      drawF(pts, clr, type, idx, isTarget) {
         const path = new Path2D();
         pts.forEach((p,i) => { const pt = this.iso(p.x,p.y,p.z); if(i===0) path.moveTo(pt.x,pt.y); else path.lineTo(pt.x,pt.y); });
         path.closePath();
         let c = clr;
         if(type==='left') c = shade(clr, -25); if(type==='top') c = shade(clr, 15);
+        
+        // Oil glow effect
+        if(isTarget && this.cfg.oil && type === 'front') c = '#fb923c';
+
         if(this.selectedLayer === idx) c = shade(c, 30); else if(this.hoveredLayer === idx) c = shade(c, 15);
+        
         this.ctx.fillStyle = c; this.ctx.fill(path);
-        this.ctx.strokeStyle = this.selectedLayer === idx ? '#fff' : shade(clr, -40);
-        this.ctx.lineWidth = type==='front' ? 1.5 : 0.8; this.ctx.stroke(path);
+        
+        if(this.cfg.tex && type !== 'top' && idx >= 0) {
+           this.ctx.save(); this.ctx.globalAlpha = 0.3;
+           const layer = this.preset.layers[idx];
+           if(layer && layer.type==='sandstone') this.ctx.fillStyle = Pats.sand;
+           else if(layer && layer.type==='carbonate') this.ctx.fillStyle = Pats.carb;
+           else if(layer && layer.type==='shale') this.ctx.fillStyle = Pats.shale;
+           this.ctx.clip(path); this.ctx.fill(); this.ctx.restore();
+        }
+
+        this.ctx.strokeStyle = this.selectedLayer === idx ? '#ffffff' : shade(clr, -40);
+        this.ctx.lineWidth = type==='front' || this.selectedLayer === idx ? 2 : 1; this.ctx.stroke(path);
         this.hitZones.push({path, idx});
       }
 
       render() {
-        this.ctx.clearRect(0,0,800,600);
-        this.hitZones = [];
+        this.ctx.clearRect(0,0,1200,900);
+        this.hitZones = []; initPats(this.ctx);
         const pMin = this.preset.rMin, pMax = this.preset.rMax;
-        const H = 250 * 2.0; // VE = 2.0 for 3D block
+        const H = 350 * this.cfg.ve; 
         const N = this.normProfile.length;
         const dx = this.W / (N-1);
         const hz = [];
@@ -518,18 +533,44 @@
           }
         }
 
-        // Draw 3D
+        // Draw 3D Layers
         for(let l = this.preset.layers.length-1; l>=0; l--) {
-          const tP = hz[l], bP = hz[l+1], clr = this.preset.layers[l].c;
-          if(this.preset.layers[l].type !== 'water') {
-            this.drawF([ {x:0, y:tP[0].y, z:this.D}, {x:0, y:tP[0].y, z:0}, {x:0, y:bP[0].y, z:0}, {x:0, y:bP[0].y, z:this.D} ], clr, 'left', l);
+          const tP = hz[l], bP = hz[l+1], clr = this.preset.layers[l].c, isTarget = this.preset.layers[l].target && !isTopo;
+          if(this.preset.layers[l].type !== 'water' || !this.cfg.water) {
+            this.drawF([ {x:0, y:tP[0].y, z:this.D}, {x:0, y:tP[0].y, z:0}, {x:0, y:bP[0].y, z:0}, {x:0, y:bP[0].y, z:this.D} ], clr, 'left', l, isTarget);
           }
           const fP = []; for(let i=0; i<N; i++) fP.push({x: tP[i].x, y: tP[i].y, z:0}); for(let i=N-1; i>=0; i--) fP.push({x: bP[i].x, y: bP[i].y, z:0});
-          this.drawF(fP, clr, 'front', l);
+          this.drawF(fP, clr, 'front', l, isTarget);
         }
 
         const tP = []; for(let i=0; i<N; i++) tP.push({x: hz[0][i].x, y: hz[0][i].y, z: this.D}); for(let i=N-1; i>=0; i--) tP.push({x: hz[0][i].x, y: hz[0][i].y, z: 0});
-        this.drawF(tP, isTopo?'#22c55e':'#38bdf8', 'top', 0);
+        this.drawF(tP, isTopo?'#22c55e':'#38bdf8', 'top', -1, false);
+
+        // 3D Text Badges (Floating HUD)
+        if(this.cfg.badge) {
+          const midI = Math.floor(N/2);
+          for(let l=0; l<this.preset.layers.length; l++) {
+            const hDiff = Math.abs(hz[l+1][midI].y - hz[l][midI].y);
+            if(hDiff > 20) {
+              const yMid = (hz[l][midI].y + hz[l+1][midI].y)/2;
+              const ptFront = this.iso(this.W/2, yMid, 0);
+              const ptLabel = this.iso(this.W/2 + 200, yMid, -250);
+
+              this.ctx.beginPath(); this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)'; this.ctx.setLineDash([4,4]); this.ctx.lineWidth = 1.5;
+              this.ctx.moveTo(ptFront.x, ptFront.y); this.ctx.lineTo(ptLabel.x, ptLabel.y); this.ctx.stroke(); this.ctx.setLineDash([]);
+              
+              const bw = 160, bh = 24;
+              this.ctx.fillStyle = this.selectedLayer === l ? 'rgba(255, 247, 237, 0.95)' : 'rgba(255, 255, 255, 0.9)';
+              this.ctx.fillRect(ptLabel.x, ptLabel.y - bh/2, bw, bh);
+              this.ctx.strokeStyle = this.selectedLayer === l || this.preset.layers[l].target ? '#ea580c' : '#cbd5e1';
+              this.ctx.lineWidth = this.selectedLayer === l ? 2 : 1; this.ctx.strokeRect(ptLabel.x, ptLabel.y - bh/2, bw, bh);
+              
+              this.ctx.fillStyle = this.preset.layers[l].target ? '#b45309' : '#0f172a';
+              this.ctx.font = 'bold 11px "Plus Jakarta Sans"';
+              this.ctx.textAlign = 'left'; this.ctx.fillText(this.preset.layers[l].name, ptLabel.x + 8, ptLabel.y + 4);
+            }
+          }
+        }
       }
     }
 
