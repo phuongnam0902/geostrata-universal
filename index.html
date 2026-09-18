@@ -3,1466 +3,660 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeoStrata-Universal | Mặt cắt Địa hình & Phân tầng Địa chất Tự nhiên 2D</title>
-  <!-- Tailwind CSS CDN -->
+  <title>GeoStrata-Universal | 2D Cross-Section & 3D Isometric Corner</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; overflow-x: hidden; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .card-pro { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     
-    body {
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    }
-    code, pre, .font-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-    .card-pro {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
-    }
-    .pill-btn {
-      transition: all 0.15s ease-in-out;
-    }
-    .pill-btn:hover {
-      transform: translateY(-1px);
-    }
+    #analysis-drawer { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    /* Hover effect cho widget 3D */
+    #iso-widget { transition: transform 0.2s, box-shadow 0.2s; }
+    #iso-widget:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
   </style>
 </head>
-<body class="bg-slate-50/70 text-slate-800 min-h-screen flex flex-col antialiased">
+<body class="text-slate-800 min-h-screen flex flex-col antialiased">
 
   <!-- TOP APP BAR -->
-  <header class="border-b border-slate-200 bg-white/95 backdrop-blur sticky top-0 z-50 px-5 py-2.5 shadow-sm">
-    <div class="max-w-[1920px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
-      
-      <!-- Logo & Title -->
-      <div class="flex items-center space-x-3 w-full lg:w-auto justify-between lg:justify-start">
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-sky-600 flex items-center justify-center shadow-md shadow-teal-500/20 text-white">
-            <i data-lucide="mountain-snow" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <div class="flex items-center space-x-2">
-              <h1 class="text-base font-extrabold tracking-tight text-slate-900">GeoStrata Pro</h1>
-              <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">Natural 2D Engine</span>
-            </div>
-            <p class="text-[11px] text-slate-500">Mặt cắt Lát cắt Địa hình & Thạch học Tự nhiên (Cây cỏ • Mặt nước • Vân đá • Vỉa dầu)</p>
-          </div>
+  <header class="border-b border-slate-200 bg-white/95 backdrop-blur sticky top-0 z-40 px-5 py-2.5 shadow-sm">
+    <div class="max-w-[1920px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+          <i data-lucide="layers" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-extrabold text-slate-900 tracking-tight">GeoStrata Pro</h1>
+          <p class="text-[11px] text-slate-500">Mặt cắt 2D & Khối Isometric 3D</p>
         </div>
       </div>
 
-      <!-- Google Earth Style Location Search Bar -->
-      <div class="w-full lg:flex-1 max-w-xl mx-2">
+      <div class="w-full lg:flex-1 max-w-xl">
         <div class="relative">
           <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-          <input 
-            type="text" 
-            id="input-location-search" 
-            placeholder="Tìm địa điểm trên Trái Đất (ví dụ: Bể Cửu Long, Hải Thạch, Ngọc Linh, Tây Nguyên, Fansipan...)" 
-            class="w-full pl-9 pr-24 py-1.5 text-xs bg-slate-100 hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-sky-500 rounded-xl outline-none transition shadow-inner font-medium text-slate-700 placeholder:text-slate-400"
-          >
-          <button id="btn-search-locate" class="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition shadow-sm">
-            Định vị
-          </button>
+          <input type="text" id="input-location-search" placeholder="Nhập địa điểm (ví dụ: Cửu Long, Nam Côn Sơn, Tây Nguyên, Đồng bằng...)" class="w-full pl-9 pr-24 py-1.5 text-xs bg-slate-100 hover:bg-slate-50 focus:bg-white border border-slate-200 focus:border-sky-500 rounded-xl outline-none transition font-medium text-slate-700">
+          <button id="btn-search-locate" class="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition">Định vị</button>
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center space-x-2 w-full lg:w-auto justify-end">
-        <span id="badge-detected-geo" class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-xs">
-          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600"></i>
-          <span id="txt-location-status">Bể Cửu Long (10°15'N, 107°45'E)</span>
-        </span>
-        <button id="btn-export-png" class="flex items-center space-x-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition shadow-sm">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i>
-          <span>Xuất Bản vẽ</span>
+      <div class="flex items-center space-x-2">
+        <button id="btn-export-png" class="flex items-center space-x-1 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg shadow-sm">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> <span>Xuất Bản vẽ</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- QUICK PRESET SUGGESTIONS (CHỌN NHANH ĐỊA DANH / MÔ HÌNH) -->
-  <div class="bg-white border-b border-slate-200/80 px-5 py-2">
-    <div class="max-w-[1920px] mx-auto flex items-center gap-2 overflow-x-auto text-xs py-0.5">
-      <span class="text-slate-600 font-bold text-[11px] flex items-center gap-1 shrink-0">
-        <i data-lucide="compass" class="w-3.5 h-3.5 text-sky-600"></i> Địa danh tiêu biểu:
-      </span>
-      <button data-quick-preset="cuu_long" class="quick-pill-btn pill-btn active bg-sky-100 text-sky-800 border border-sky-300 font-bold px-3 py-1 rounded-full text-[11px] shrink-0">
-        🌊 Bể Cửu Long (Lô 15-1, Bạch Hổ)
-      </button>
-      <button data-quick-preset="nam_con_son" class="quick-pill-btn pill-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-[11px] shrink-0">
-        🏝️ Bể Nam Côn Sơn (Hải Thạch - Mộc Tinh)
-      </button>
-      <button data-quick-preset="song_hong" class="quick-pill-btn pill-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-[11px] shrink-0">
-        ⛵ Bể Sông Hồng (Kéo tách 17km & Hàm Rồng)
-      </button>
-      <button data-quick-preset="phu_quoc" class="quick-pill-btn pill-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-[11px] shrink-0">
-        🛶 Bể Phú Quốc (Mesozoi H1-H5 & Hà Tiên)
-      </button>
-      <button data-quick-preset="continental_mountain" class="quick-pill-btn pill-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-[11px] shrink-0">
-        ⛰️ Dãy Ngọc Linh - Tây Nguyên (Đồi núi / DEM)
-      </button>
-      <button data-quick-preset="alluvial_water" class="quick-pill-btn pill-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-[11px] shrink-0">
-        🌾 Đồng bằng Châu thổ & Nước ngầm
-      </button>
+  <!-- QUICK PRESETS -->
+  <div class="bg-white border-b border-slate-200 px-5 py-2">
+    <div class="max-w-[1920px] mx-auto flex gap-2 overflow-x-auto text-xs py-0.5 items-center">
+      <span class="font-bold text-[11px] text-slate-500">Mẫu Địa chất:</span>
+      <button data-preset="cuu_long" class="preset-btn active bg-sky-100 text-sky-800 border-sky-300 border font-bold px-3 py-1 rounded-full text-[11px] shrink-0">🌊 Bể Cửu Long (Lô 15-1)</button>
+      <button data-preset="nam_con_son" class="preset-btn bg-slate-100 text-slate-700 border-slate-200 border px-3 py-1 rounded-full text-[11px] shrink-0">🏝️ Bể Nam Côn Sơn</button>
+      <button data-preset="song_hong" class="preset-btn bg-slate-100 text-slate-700 border-slate-200 border px-3 py-1 rounded-full text-[11px] shrink-0">⛵ Bể Sông Hồng</button>
+      <button data-preset="phu_quoc" class="preset-btn bg-slate-100 text-slate-700 border-slate-200 border px-3 py-1 rounded-full text-[11px] shrink-0">🛶 Bể Phú Quốc</button>
+      <button data-preset="continental_mountain" class="preset-btn bg-slate-100 text-slate-700 border-slate-200 border px-3 py-1 rounded-full text-[11px] shrink-0">⛰️ Dãy Tây Nguyên - Ngọc Linh</button>
+      <button data-preset="alluvial_water" class="preset-btn bg-slate-100 text-slate-700 border-slate-200 border px-3 py-1 rounded-full text-[11px] shrink-0">🌾 Đồng bằng Sông Cửu Long</button>
     </div>
   </div>
 
-  <!-- MAIN WORKSPACE LAYOUT (EXPANSIVE HERO VIEW) -->
-  <main class="flex-1 p-4 lg:p-5 max-w-[1920px] mx-auto w-full grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+  <main class="flex-1 p-4 lg:p-5 max-w-[1920px] mx-auto w-full grid grid-cols-1 xl:grid-cols-12 gap-5 items-start relative">
     
-    <!-- LEFT SIDEBAR: INPUT MAP & CONTROLS (4 COLS) -->
-    <section class="xl:col-span-4 flex flex-col space-y-4">
-      
-      <!-- Clean Minimalist Input Map Card -->
+    <!-- LEFT SIDEBAR: INPUT MAP & CONTROLS -->
+    <section class="xl:col-span-3 flex flex-col space-y-4 z-10">
+      <!-- Bản đồ đầu vào -->
       <div class="card-pro overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <i data-lucide="map" class="w-4 h-4 text-emerald-600"></i>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Ảnh Bản đồ Đầu vào</h2>
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <button id="btn-auto-detect" class="text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm hidden">
-              <i data-lucide="wand-2" class="w-3 h-3"></i> Tự động Căn tuyến
-            </button>
-            <label class="text-[11px] bg-sky-600 hover:bg-sky-700 text-white font-bold px-2.5 py-1 rounded-lg cursor-pointer transition shadow-sm flex items-center gap-1">
-              <i data-lucide="upload" class="w-3 h-3"></i> Tải ảnh
-              <input type="file" id="input-map-file" accept="image/*" class="hidden">
-            </label>
-          </div>
+        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+          <h2 class="text-xs font-bold uppercase text-slate-700 flex items-center gap-1"><i data-lucide="map" class="w-4 h-4 text-sky-600"></i> Bản đồ Đầu vào</h2>
+          <label class="text-[10px] bg-sky-600 hover:bg-sky-700 text-white font-bold px-2 py-1 rounded cursor-pointer shadow-sm">
+            Tải ảnh <input type="file" id="input-map-file" accept="image/*" class="hidden">
+          </label>
         </div>
-
-        <!-- Dropzone / Canvas Container (Clean, uncluttered) -->
-        <div class="relative bg-slate-100/70 p-2 min-h-[300px] flex items-center justify-center overflow-hidden" id="map-container">
-          <canvas id="map-canvas" class="max-w-full rounded-lg shadow-sm cursor-crosshair hidden"></canvas>
-          
-          <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-sky-500 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition w-full h-[280px] bg-white/70">
-            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-2.5 shadow-sm">
-              <i data-lucide="image-plus" class="w-6 h-6"></i>
-            </div>
-            <h3 class="text-xs font-bold text-slate-800 mb-1">Kéo & Thả ảnh bản đồ vào đây</h3>
-            <p class="text-[11px] text-slate-500 mb-2">Hoặc click để chọn ảnh / bấm <strong>Ctrl + V</strong> dán ảnh chụp</p>
-            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold border border-slate-200">
-              Bản đồ cấu trúc, ảnh DEM, bản đồ địa hình, bản đồ đẳng sâu
-            </span>
+        <div class="relative bg-slate-100 p-2 min-h-[220px] flex items-center justify-center" id="map-container">
+          <canvas id="map-canvas" class="max-w-full rounded shadow-sm cursor-crosshair hidden"></canvas>
+          <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-sky-500 rounded-lg p-4 text-center cursor-pointer bg-white">
+            <h3 class="text-xs font-bold text-slate-800 mb-1">Kéo thả bản đồ vào đây</h3>
+            <p class="text-[10px] text-slate-500">Tự động nhận diện & trích xuất mặt cắt 2D/3D mà không cần nhập thông số.</p>
           </div>
-        </div>
-
-        <!-- Clean Line Info Bar -->
-        <div id="line-info-bar" class="px-3.5 py-2 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between hidden">
-          <div class="flex items-center gap-2">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-sky-500 border border-white shadow"></span> Tuyến A
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-fuchsia-500 border border-white shadow ml-1.5"></span> Tuyến B
-            <span class="text-slate-400">| Kéo điểm tròn để dời tuyến</span>
-          </div>
-          <span id="line-length-badge" class="font-mono text-sky-700 font-bold">11.8 km</span>
         </div>
       </div>
 
-      <!-- Controls & Calibration Card -->
-      <div class="card-pro p-4 space-y-3.5">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-            <i data-lucide="sliders" class="w-4 h-4 text-sky-600"></i> Cấu hình Thang đo & Hiển thị
-          </h3>
-          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Chuẩn Sổ tay 1</span>
+      <!-- Tùy chọn hiển thị -->
+      <div class="card-pro p-4">
+        <h3 class="text-xs font-bold text-slate-700 border-b border-slate-100 pb-2 mb-3">Tùy chọn Minh họa</h3>
+        <div class="grid grid-cols-1 gap-2 text-xs">
+          <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded"><input type="checkbox" id="chk-textures" checked class="accent-sky-600 w-4 h-4"><span class="font-bold">Vân đá & Cây cỏ tự nhiên</span></label>
+          <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded"><input type="checkbox" id="chk-badges" checked class="accent-sky-600 w-4 h-4"><span class="font-bold">Nhãn & Chú thích Độ sâu</span></label>
+          <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded"><input type="checkbox" id="chk-water" checked class="accent-sky-600 w-4 h-4"><span class="font-bold">Mặt nước & Sóng biển</span></label>
+          <label class="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded" id="box-oil"><input type="checkbox" id="chk-oil" checked class="accent-amber-600 w-4 h-4"><span class="font-bold text-amber-700">Vỉa Dầu & Đường OWC</span></label>
         </div>
-
-        <!-- Scale Calibration Inputs (Rộng rãi, dễ đọc) -->
-        <div>
-          <span class="text-[11px] font-bold text-slate-600 block mb-1.5">Hiệu chuẩn Thang đo Màu (Colorbar Range):</span>
-          <div class="grid grid-cols-3 gap-2">
-            <div class="bg-red-50/50 p-2 rounded-lg border border-red-200/60">
-              <span class="text-[10px] text-red-700 font-bold block mb-0.5">Màu Đỏ/Nóng (Max):</span>
-              <input type="number" id="input-range-max" value="-2800" class="w-full bg-white border border-red-200 rounded px-2 py-1 text-slate-800 font-mono text-xs font-bold outline-none focus:ring-1 focus:ring-red-400">
-            </div>
-            <div class="bg-indigo-50/50 p-2 rounded-lg border border-indigo-200/60">
-              <span class="text-[10px] text-indigo-700 font-bold block mb-0.5">Màu Tím/Lạnh (Min):</span>
-              <input type="number" id="input-range-min" value="-4600" class="w-full bg-white border border-indigo-200 rounded px-2 py-1 text-slate-800 font-mono text-xs font-bold outline-none focus:ring-1 focus:ring-indigo-400">
-            </div>
-            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
-              <span class="text-[10px] text-slate-600 font-bold block mb-0.5">Đơn vị:</span>
-              <select id="select-unit" class="w-full bg-white border border-slate-200 rounded px-1.5 py-1 text-slate-800 text-xs font-bold outline-none">
-                <option value="mTVDss" selected>mTVDss</option>
-                <option value="m">mét (m)</option>
-                <option value="ft">feet (ft)</option>
-              </select>
-            </div>
-          </div>
+        <div class="mt-4 pt-3 border-t border-slate-100">
+          <div class="flex justify-between mb-1 text-[11px] font-bold text-slate-600"><span>Phóng đại đứng (VE):</span> <span id="val-ve" class="text-sky-600">2.5x</span></div>
+          <input type="range" id="slider-ve" min="1.0" max="6.0" step="0.5" value="2.5" class="w-full accent-sky-600 cursor-pointer">
         </div>
-
-        <!-- Sliders: VE & OWC -->
-        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <div>
-            <div class="flex justify-between mb-1 text-[11px] text-slate-600">
-              <span class="font-bold">Phóng đại đứng (VE):</span>
-              <span id="val-ve" class="text-sky-700 font-mono font-bold">2.5x</span>
-            </div>
-            <input type="range" id="slider-ve" min="1.0" max="6.0" step="0.5" value="2.5" class="w-full accent-sky-600 cursor-pointer">
-          </div>
-          <div id="owc-container">
-            <div class="flex justify-between mb-1 text-[11px] text-slate-600">
-              <span class="font-bold">Mặt phẳng OWC:</span>
-              <span id="val-owc" class="text-amber-700 font-mono font-bold">-3620 m</span>
-            </div>
-            <input type="range" id="slider-owc" min="3400" max="3800" step="10" value="3620" class="w-full accent-amber-600 cursor-pointer">
-          </div>
-        </div>
-
-        <!-- Feature Toggles -->
-        <div class="pt-2 border-t border-slate-100">
-          <span class="text-[11px] font-bold text-slate-600 block mb-1.5">Tùy chọn Minh họa:</span>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 border border-slate-100">
-              <input type="checkbox" id="chk-show-textures" checked class="rounded text-emerald-600 accent-emerald-600 w-4 h-4">
-              <span class="font-semibold text-slate-700 text-[11px]">Vân Đá & Cây cỏ</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 border border-slate-100">
-              <input type="checkbox" id="chk-show-depth-badges" checked class="rounded text-sky-600 accent-sky-600 w-4 h-4">
-              <span class="font-semibold text-slate-700 text-[11px]">Chú thích Độ sâu</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 border border-slate-100">
-              <input type="checkbox" id="chk-show-faults" checked class="rounded text-red-600 accent-red-600 w-4 h-4">
-              <span class="font-semibold text-slate-700 text-[11px]">Đứt gãy kiến tạo</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 border border-slate-100" id="box-toggle-oil">
-              <input type="checkbox" id="chk-show-oil" checked class="rounded text-amber-600 accent-amber-600 w-4 h-4">
-              <span class="font-semibold text-slate-700 text-[11px]">Thân Dầu Khí</span>
-            </label>
-          </div>
+        <div class="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-[10px] text-emerald-800 font-semibold flex items-start gap-1.5 shadow-inner">
+          <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600"></i>
+          <p>Mẹo: Click trực tiếp vào các tầng trên bản vẽ 2D hoặc khối 3D để xem phân tích chuyên sâu.</p>
         </div>
       </div>
     </section>
 
-    <!-- RIGHT SECTION: EXPANSIVE WIDESCREEN HERO CROSS-SECTION CANVAS (8 COLS) -->
-    <section class="xl:col-span-8 flex flex-col space-y-4">
-      <div class="card-pro overflow-hidden flex flex-col flex-1 shadow-md">
+    <!-- RIGHT SECTION: DUAL CANVAS (2D MAIN + 3D INSET) -->
+    <section class="xl:col-span-9 flex flex-col h-full z-0 relative">
+      <div class="card-pro flex flex-col flex-1 shadow-lg overflow-hidden border-slate-200 relative">
+        <div class="px-5 py-3 border-b border-slate-100 bg-white flex justify-between items-center z-10">
+          <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2" id="block-title">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span> Mặt cắt Địa chất 2D & 3D (Tuyến A - B)
+          </h2>
+          <span id="badge-location" class="text-[11px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-600 border border-slate-200">📍 Bể Cửu Long</span>
+        </div>
         
-        <!-- Canvas Toolbar -->
-        <div class="px-5 py-3 border-b border-slate-100 bg-white flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <h2 class="text-sm font-extrabold text-slate-800" id="section-view-title">
-              Mặt cắt Cấu trúc Địa chất & Địa hình 2D (Tuyến A - B)
-            </h2>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button id="btn-toggle-fullscreen" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 border border-slate-200">
-              <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
-              <span>Xem Toàn màn hình</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Canvas Frame Container (Widescreen, High Resolution, Airy Spacing) -->
-        <div class="p-3 bg-slate-100/50 flex flex-col">
-          <div class="relative w-full rounded-xl overflow-hidden border border-slate-200/80 bg-white shadow-inner flex items-center justify-center min-h-[560px]">
-            <canvas id="cross-section-canvas" class="w-full h-auto block"></canvas>
-          </div>
-        </div>
-
-        <!-- Layer Depth & Lithology Summary Strip (Bảng chú thích độ sâu & đặc tính) -->
-        <div class="p-4 bg-white border-t border-slate-100">
-          <div class="flex items-center justify-between mb-2">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-              <i data-lucide="layers" class="w-4 h-4 text-sky-600"></i> Bảng Phân tầng Địa chất & Độ sâu Chi tiết
-            </h4>
-            <span class="text-[11px] text-slate-500 italic">Trích xuất chính xác theo Sổ tay 1 & Nguyên lý Trầm tích</span>
-          </div>
-          <div id="strata-depth-table" class="overflow-x-auto">
-            <!-- Render dynamically -->
+        <div class="bg-slate-50 flex-1 relative flex items-center justify-center p-2 min-h-[650px]">
+          <!-- 1. MAIN 2D CROSS-SECTION CANVAS -->
+          <canvas id="cross-section-canvas" class="w-full h-auto max-h-[800px] bg-white rounded-lg border border-slate-200 shadow-sm block cursor-pointer"></canvas>
+          
+          <!-- 2. CORNER 3D ISOMETRIC WIDGET (INSET) -->
+          <div id="iso-widget" class="absolute bottom-6 right-6 w-80 h-64 bg-white/95 backdrop-blur rounded-xl shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col z-20 cursor-pointer">
+            <div class="px-3 py-1.5 bg-slate-100/90 text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider border-b border-slate-200 flex justify-between items-center">
+              <span class="flex items-center gap-1.5"><i data-lucide="box" class="w-3 h-3"></i> Khối 3D Isometric</span>
+            </div>
+            <!-- Canvas 3D thu nhỏ -->
+            <canvas id="isometric-canvas" class="flex-1 w-full h-full block bg-slate-50/50"></canvas>
           </div>
         </div>
       </div>
     </section>
+
   </main>
 
-  <!-- FOOTER -->
-  <footer class="border-t border-slate-200 py-3 px-6 text-center text-xs text-slate-400 bg-white mt-auto">
-    GeoStrata Pro &copy; 2026 | Phiên bản Nâng cấp Toàn diện dành cho anh Isaac | Chuẩn đồ họa Địa chất Tự nhiên
-  </footer>
+  <!-- DETAILED ANALYSIS DRAWER -->
+  <div id="analysis-drawer" class="fixed top-0 right-0 h-full w-[420px] bg-white shadow-2xl transform translate-x-full z-50 flex flex-col border-l border-slate-200">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+      <div class="flex items-center gap-2">
+        <i data-lucide="microscope" class="w-5 h-5 text-sky-600"></i>
+        <h2 class="text-sm font-extrabold text-slate-800">Phân tích Địa tầng</h2>
+      </div>
+      <button id="btn-close-drawer" class="text-slate-400 hover:text-red-500 transition p-1 rounded-lg hover:bg-slate-200">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-5 space-y-5" id="drawer-content"></div>
+  </div>
+  <div id="drawer-overlay" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 hidden transition-opacity"></div>
 
-  <!-- ========================================================================= -->
-  <!-- NATURAL 2D GEOLOGICAL ENGINE SCRIPT                                       -->
-  <!-- ========================================================================= -->
   <script>
-    // 1. CƠ SỞ DỮ LIỆU ĐỊA CHẤT CHUẨN XÁC SỔ TAY 1 (KÈM MÔ TẢ ĐỘ SÂU & VÂN THẠCH HỌC)
-    const GEOLOGY_DATABASE = {
-      cuu_long: {
-        id: "cuu_long",
-        name: "Bể Cửu Long (Lô 15-1, Bạch Hổ - Lạc Đà Trắng)",
-        basin_type: "Bồn trũng Tách giãn Cenozoic (Rift Basin)",
-        location: "Thềm lục địa Đông Nam Bộ (10°15'N, 107°45'E)",
-        default_unit: "mTVDss",
-        default_range: { max: -2800, min: -4600 },
-        summary: "Bồn trũng rifting Đệ Tam chứa dầu lớn nhất Việt Nam. Cát chứa dầu Lower E, đá mẹ Trà Tân và Móng Granit nứt nẻ kinh điển.",
-        citation: "Sổ tay 1: Báo cáo Nghiên cứu VPI & Murphy Oil Lô 15-1/05",
+    // 1. GEOLOGY DATABASE WITH DETAILED EXPERT ANALYSIS & REFERENCES
+    const DB = {
+      cuu_long: { id: "cuu_long", name: "Bể Cửu Long (Mỏ Bạch Hổ)", loc: "Thềm lục địa ĐNB", unit: "mTVDss", rMin: -4600, rMax: -2800, 
+        refs: [
+          { text: "Đánh giá Tiềm năng Dầu khí Bể Cửu Long - Viện Dầu khí Việt Nam (VPI)", url: "https://www.vpi.pvn.vn/" },
+          { text: "Đặc điểm thạch học Mỏ Bạch Hổ - Tạp chí Dầu khí", url: "https://pvn.vn/Pages/tap-chi-dau-khi.aspx" }
+        ],
         layers: [
-          { name: "Nước biển", sub: "Water Column", top: 0, bot: -90, thick: 90, litho: "water", color: "#60a5fa", role: "Tầng nước biển" },
-          { name: "Hệ tầng Biển Đông (Q - N2)", sub: "Quaternary Sand & Clay", top: -90, bot: -740, thick: 650, litho: "shale", color: "#93c5fd", role: "Tầng phủ bở rời" },
-          { name: "Hệ tầng Đồng Nai (N1-3)", sub: "Regional Marine Shale Seal", top: -740, bot: -1590, thick: 850, litho: "shale", color: "#86efac", role: "Tầng chắn khu vực (Seal)" },
-          { name: "Hệ tầng Mãng Cầu (N1-2)", sub: "Sandstone & Marine Shale", top: -1590, bot: -2340, thick: 750, litho: "sand_shale", color: "#fde047", role: "Chắn & Chứa phụ" },
-          { name: "Hệ tầng Bạch Hổ Thượng", sub: "Upper Bach Ho Sandstones", top: -2340, bot: -2990, thick: 650, litho: "sandstone", color: "#fdba74", role: "Đá chứa cát C, D" },
-          { name: "TẦNG CÁT LOWER E (MAIN PAY)", sub: "Lower E Oligocene Pay Sand", top: -2990, bot: -3100, thick: 110, is_target: true, litho: "sandstone", color: "#d97706", role: "VỈA DẦU CHỦ ĐẠO (NET PAY)" },
-          { name: "Hệ tầng Bạch Hổ Hạ", sub: "Intra-formational Shale", top: -3100, bot: -3350, thick: 250, litho: "shale", color: "#f97316", role: "Chắn nội tầng" },
-          { name: "Hệ tầng Trà Tân (E3-2)", sub: "Deep Lacustrine Source Rock", top: -3350, bot: -4050, thick: 700, litho: "organic_shale", color: "#64748b", role: "ĐÁ MẸ SINH DẦU CHÍNH" },
-          { name: "Hệ tầng Trà Cú (E3-1)", sub: "Syn-rift Conglomerate & Sand", top: -4050, bot: -4400, thick: 350, litho: "conglomerate", color: "#78716c", role: "Trầm tích đáy rift" },
-          { name: "MÓNG GRANITOID NỨT NẺ", sub: "Fractured Basement Reservoir", top: -4400, bot: -5800, thick: 1400, is_target: true, litho: "granite", color: "#f472b6", role: "ĐÁ CHỨA MÓNG NỨT NẺ KINH ĐIỂN" }
+          { name: "Nước biển", top: 0, bot: -90, thick: 90, type: "water", c: "#3b82f6", details: { age: "Hiện đại (Quaternary)", env: "Biển nông.", litho: "Nước mặn.", role: "Khối lượng nước bề mặt."} },
+          { name: "Hệ tầng Biển Đông", top: -90, bot: -740, thick: 650, type: "shale", c: "#93c5fd", details: { age: "Đệ Tứ - Pliocene", env: "Biển nông.", litho: "Sét kết bở rời.", role: "Tầng phủ (Overburden)."} },
+          { name: "Hệ tầng Đồng Nai", top: -740, bot: -1590, thick: 850, type: "shale", c: "#86efac", details: { age: "Miocene muộn", env: "Biển tiến.", litho: "Sét kết.", role: "Tầng Chắn Khu Vực (Regional Seal)."} },
+          { name: "Hệ tầng Mãng Cầu", top: -1590, bot: -2340, thick: 750, type: "sand_shale", c: "#fde047", details: { age: "Miocene giữa", env: "Châu thổ.", litho: "Cát sét xen kẹp.", role: "Hệ thống chứa phụ."} },
+          { name: "Bạch Hổ Thượng", top: -2340, bot: -2990, thick: 650, type: "sandstone", c: "#fdba74", details: { age: "Oligocene muộn", env: "Sông ngòi.", litho: "Cát kết trung-thô.", role: "Vỉa chứa truyền thống."} },
+          { name: "CÁT LOWER E (MAIN PAY)", top: -2990, bot: -3100, thick: 110, type: "sandstone", c: "#d97706", target: true, details: { age: "Oligocene sớm", env: "Quạt ngầm hồ.", litho: "Cát kết thạch anh sạch.", role: "VỈA CHỨA DẦU CHỦ ĐẠO."} },
+          { name: "Sét Trà Tân (ĐÁ MẸ)", top: -3100, bot: -4000, thick: 900, type: "organic_shale", c: "#64748b", details: { age: "Oligocene", env: "Hồ sâu yếm khí.", litho: "Sét đen hữu cơ (TOC cao).", role: "ĐÁ MẸ SINH DẦU CHÍNH."} },
+          { name: "MÓNG GRANIT NỨT NẺ", top: -4000, bot: -5800, thick: 1800, type: "granite", c: "#ec4899", target: true, details: { age: "Mesozoic", env: "Xâm nhập Magma.", litho: "Granitoid nứt nẻ thủy nhiệt.", role: "BẪY CHỨA DẦU ĐỘC ĐÁO BẬC NHẤT."} }
         ]
       },
-      nam_con_son: {
-        id: "nam_con_son",
-        name: "Bể Nam Côn Sơn (Hải Thạch - Mộc Tinh, Đại Hùng)",
-        basin_type: "Bồn Tách giãn & Uốn nếp võng biển sâu",
-        location: "Thềm lục địa Nam Biển Đông (08°12'N, 108°40'E)",
-        default_unit: "mTVDss",
-        default_range: { max: -1500, min: -4800 },
-        summary: "Bồn khí - condensate chiến lược tiêu biểu với cát kết turbidite MMF30 và khối rạn san hô cacbonat Miocen giữa.",
-        citation: "Sổ tay 1: Nghiên cứu VPI về Cát Turbidite MMF30 và Rạn vôi Miocen",
+      nam_con_son: { id: "nam_con_son", name: "Bể Nam Côn Sơn (Mỏ Lan Tây)", loc: "Thềm lục địa phía Nam", unit: "mTVDss", rMin: -4800, rMax: -2500, 
+        refs: [
+          { text: "Địa chất Dầu khí Bể Nam Côn Sơn - VPI", url: "https://www.vpi.pvn.vn/" },
+          { text: "Đặc điểm Carbonate bẫy khí - Hội Dầu khí VN", url: "https://dkvn.vn/" }
+        ],
         layers: [
-          { name: "Nước biển sâu (~200m)", sub: "Deep Bathymetry", top: 0, bot: -200, thick: 200, litho: "water", color: "#60a5fa", role: "Nước biển thềm sâu" },
-          { name: "Trầm tích Pliocen - Đệ tứ", sub: "Hemipelagic Sediments", top: -200, bot: -900, thick: 700, litho: "shale", color: "#93c5fd", role: "Tầng phủ" },
-          { name: "Sét kết Miocen muộn", sub: "Late Miocene Marine Shales", top: -900, bot: -1700, thick: 800, litho: "shale", color: "#86efac", role: "Tầng chắn khu vực" },
-          { name: "Sét chắn Miocen giữa", sub: "Direct Gas Seal", top: -1700, bot: -2050, thick: 350, litho: "shale", color: "#4ade80", role: "TẦNG CHẮN TRỰC TIẾP" },
-          { name: "RẠN SAN HÔ & CACBONAT MIOCEN", sub: "Middle Miocene Reef Buildup", top: -2050, bot: -2350, thick: 300, is_target: true, litho: "carbonate", color: "#38bdf8", role: "ĐÁ CHỨA CACBONAT KHÍ-CONDENSATE" },
-          { name: "CÁT KẾT TURBIDITE MMF30", sub: "Deepwater Turbidite Channel", top: -2350, bot: -2530, thick: 180, is_target: true, litho: "sandstone", color: "#eab308", role: "ĐÁ CHỨA CÁT TURBIDITE (HẢI THẠCH)" },
-          { name: "Cát & Sét Miocen sớm", sub: "Early Miocene Sediments", top: -2530, bot: -3430, thick: 900, litho: "sand_shale", color: "#fb923c", role: "Đá chứa Đại Hùng" },
-          { name: "Trầm tích Oligocen sâu", sub: "Deep Source Bed", top: -3430, bot: -4430, thick: 1000, litho: "organic_shale", color: "#64748b", role: "ĐÁ MẸ SINH KHÍ & DẦU" },
-          { name: "Móng kết tinh Tiền Cenozoic", sub: "Crystalline Basement", top: -4430, bot: -5600, thick: 1170, litho: "granite", color: "#f472b6", role: "Móng đá magma kết tinh" }
+          { name: "Nước biển sâu", top: 0, bot: -150, thick: 150, type: "water", c: "#2563eb", details: { age: "Hiện đại", env: "Biển sâu hơn Cửu Long.", litho: "Nước biển mặn.", role: "Môi trường thi công ngầm phức tạp."} },
+          { name: "Hệ tầng Biển Đông", top: -150, bot: -1200, thick: 1050, type: "shale", c: "#60a5fa", details: { age: "Đệ Tứ", env: "Biển nông.", litho: "Sét bùn bở rời, có Shallow Gas.", role: "Tầng phủ bề dày lớn."} },
+          { name: "Hệ tầng Nam Côn Sơn", top: -1200, bot: -2400, thick: 1200, type: "shale", c: "#34d399", details: { age: "Miocene muộn", env: "Biển mở.", litho: "Sét vôi xen kẹp cát mịn.", role: "Tầng chắn chính khu vực bảo vệ vỉa khí."} },
+          { name: "ĐÁ VÔI RẠN SAN HÔ (MAIN PAY)", top: -2400, bot: -2800, thick: 400, type: "carbonate", c: "#facc15", target: true, details: { age: "Miocene giữa", env: "Đới vát nhọn thềm lục địa (Reef).", litho: "Đá vôi sinh vật (Carbonate) rỗng xốp.", role: "VỈA CHỨA KHÍ TỰ NHIÊN CHỦ ĐẠO (Mỏ Lan Tây, Lan Đỏ). Độ rỗng cực tốt."} },
+          { name: "Hệ tầng Côn Sơn", top: -2800, bot: -3600, thick: 800, type: "sand_shale", c: "#fb923c", details: { age: "Miocene sớm", env: "Châu thổ.", litho: "Cát, bột sét xen kẹp.", role: "Hệ chứa và sinh khí thứ cấp."} },
+          { name: "Hệ tầng Cau (ĐÁ MẸ)", top: -3600, bot: -4800, thick: 1200, type: "organic_shale", c: "#475569", details: { age: "Oligocene", env: "Hồ đầm lầy.", litho: "Sét than (Coal), sét đen.", role: "ĐÁ MẸ SINH KHÍ (Gas-prone). TOC rất cao từ thực vật bậc cao."} }
         ]
       },
-      song_hong: {
-        id: "song_hong",
-        name: "Bể Sông Hồng (Kéo tách Trầm tích Dày 17km & Hàm Rồng)",
-        basin_type: "Bồn Kéo-tách Dọc Đới Đứt gãy Trượt bằng",
-        location: "Vịnh Bắc Bộ (19°30'N, 106°45'E)",
-        default_unit: "mTVDss",
-        default_range: { max: -1000, min: -5500 },
-        summary: "Bồn trầm tích cực dày với vòm sét diapir và đá chứa vôi dolomit hang hốc nứt nẻ tuổi Carbon-Permi (Mỏ Hàm Rồng).",
-        citation: "Sổ tay 1: Nghiên cứu VPI về Cacbonat Carbon-Permi Hàm Rồng & Clinoform",
+      song_hong: { id: "song_hong", name: "Bể Sông Hồng (Mỏ Tiền Hải)", loc: "Vịnh Bắc Bộ", unit: "mTVDss", rMin: -3500, rMax: -500, 
+        refs: [
+          { text: "Tiềm năng Dầu khí Vịnh Bắc Bộ - PetroVietnam", url: "https://www.pvn.vn/" }
+        ],
         layers: [
-          { name: "Nước biển (~80m)", sub: "Shallow Marine", top: 0, bot: -80, thick: 80, litho: "water", color: "#60a5fa", role: "Nước biển nông" },
-          { name: "Nêm Clinoform Đệ Tứ & Pliocen", sub: "Prograding Clinoforms", top: -80, bot: -1480, thick: 1400, litho: "shale", color: "#93c5fd", role: "Tầng phủ nêm châu thổ" },
-          { name: "Cát kết acko & Sét Miocen muộn", sub: "Shallow Marine Clastics", top: -1480, bot: -2480, thick: 1000, litho: "sand_shale", color: "#fde047", role: "Chứa & Chắn Miocen" },
-          { name: "Miocen giữa & Vòm Sét (Diapir)", sub: "Shale Diapirism Trap", top: -2480, bot: -3580, thick: 1100, litho: "shale", color: "#86efac", role: "BẪY VÒM SÉT (DIAPIR)" },
-          { name: "Cát kết lục nguyên Miocen sớm", sub: "Syn-rift Sandstone", top: -3580, bot: -4480, thick: 900, litho: "sandstone", color: "#fb923c", role: "Đá chứa cát kết sâu" },
-          { name: "Sét than Oligocen (Đá Mẹ)", sub: "Coal & Coaly Shale Source", top: -4480, bot: -5280, thick: 800, litho: "organic_shale", color: "#475569", role: "ĐÁ MẸ SINH KHÍ CHÍNH" },
-          { name: "ĐÁ VÔI CACBONAT CARBON-PERMI", sub: "Fractured Karst Carbonate", top: -5280, bot: -6480, thick: 1200, is_target: true, litho: "carbonate", color: "#ec4899", role: "ĐÁ CHỨA VÔI DOLOMIT KARST (HÀM RỒNG)" }
+          { name: "Nước biển", top: 0, bot: -40, thick: 40, type: "water", c: "#60a5fa", details: { age: "Hiện đại", env: "Biển nông ven bờ.", litho: "Nước lợ/mặn.", role: "Phủ bề mặt Vịnh Bắc Bộ."} },
+          { name: "Hệ tầng Thái Bình", top: -40, bot: -600, thick: 560, type: "shale", c: "#93c5fd", details: { age: "Quaternary", env: "Đồng bằng bồi tụ.", litho: "Bùn sét, cát xen kẹp.", role: "Tầng phủ nông."} },
+          { name: "Hệ tầng Tiên Hưng", top: -600, bot: -1400, thick: 800, type: "shale", c: "#a3e635", details: { age: "Miocene", env: "Biển nông - Vũng vịnh.", litho: "Sét kết phân lớp dày.", role: "Tầng chắn."} },
+          { name: "CÁT KẾT PHONG CHÂU", top: -1400, bot: -1800, thick: 400, type: "sandstone", c: "#f59e0b", target: true, details: { age: "Miocene sớm", env: "Sông ngòi - Tam giác châu.", litho: "Cát kết thạch anh.", role: "Tập chứa khí truyền thống (Mỏ Tiền Hải C)."} },
+          { name: "Sét Phong Châu (ĐÁ MẸ)", top: -1800, bot: -2700, thick: 900, type: "organic_shale", c: "#475569", details: { age: "Oligocene", env: "Đầm lầy nội địa.", litho: "Sét bột xen vỉa than.", role: "Nguồn sinh khí (Gas-prone) chủ yếu."} },
+          { name: "MÓNG CARBONATE CỔ SINH", top: -2700, bot: -3500, thick: 800, type: "carbonate", c: "#e879f9", details: { age: "Paleozoic (Tiền Cenozoic)", env: "Biển thềm cổ đại.", litho: "Đá vôi nứt nẻ Karst hóa.", role: "Móng đá vôi độc đáo, có tiềm năng chứa khí."} }
         ]
       },
-      phu_quoc: {
-        id: "phu_quoc",
-        name: "Bể Phú Quốc (Bồn Mesozoi H1-H5 & Vôi Hà Tiên)",
-        basin_type: "Bồn trũng trước núi uốn nếp Mesozoi",
-        location: "Vùng biển Tây Nam / Vịnh Thái Lan (10°10'N, 103°55'E)",
-        default_unit: "mTVDss",
-        default_range: { max: -200, min: -3800 },
-        summary: "Bồn võng Mesozoi phân cách bởi 5 mặt bất chỉnh hợp H1-H5. Cát bồi tích Creta sớm và vôi Pecmi Hà Tiên karst hóa.",
-        citation: "Sổ tay 1: Nghiên cứu VPI về Địa chấn Địa tầng Bể Phú Quốc",
+      continental_mountain: { id: "continental_mountain", name: "Dãy Tây Nguyên - Ngọc Linh", loc: "Đồi núi Lục địa", unit: "m", rMin: 0, rMax: 2600, 
+        refs: [
+          { text: "Cấu trúc Địa khối Kon Tum - Tổng cục Địa chất (DGMV)", url: "https://dgmv.gov.vn/" }
+        ],
         layers: [
-          { name: "Trầm tích Đệ Tứ & Nước biển (H1)", sub: "Quaternary Cover", top: 0, bot: -250, thick: 250, litho: "water", color: "#93c5fd", role: "Tầng phủ mặt nông" },
-          { name: "HỆ TẦNG PHÚ QUỐC (CRETA J3-K1)", sub: "Fluvial-Deltaic Sandstone", top: -250, bot: -1200, thick: 950, is_target: true, litho: "sandstone", color: "#eab308", role: "ĐÁ CHỨA CÁT KẾT BỒI TÍCH" },
-          { name: "Bất chỉnh hợp H3 (Ranh giới K-J)", sub: "Regional Unconformity H3", top: -1200, bot: -1240, thick: 40, litho: "unconformity", color: "#ef4444", role: "Ranh giới bất chỉnh hợp H3" },
-          { name: "Hệ tầng Dầu Tiếng & Đèo Bảo Lộc", sub: "Jurassic Marine Shales", top: -1240, bot: -2040, thick: 800, litho: "sand_shale", color: "#fb923c", role: "Trầm tích lục nguyên Jura" },
-          { name: "Bất chỉnh hợp H4 (Ranh giới J-T)", sub: "Regional Unconformity H4", top: -2040, bot: -2080, thick: 40, litho: "unconformity", color: "#ef4444", role: "Ranh giới bất chỉnh hợp H4" },
-          { name: "Hệ tầng Hòn Ngang & Minh Hòa", sub: "Triassic Quartzite & Lime", top: -2080, bot: -2780, thick: 700, litho: "sandstone", color: "#86efac", role: "Cát quarzit & Vôi Triat" },
-          { name: "Bất chỉnh hợp H5 (Nóc móng)", sub: "Basement Erosion Surface", top: -2780, bot: -2820, thick: 40, litho: "unconformity", color: "#b91c1c", role: "Mặt bào mòn nóc móng H5" },
-          { name: "MÓNG VÔI PECMI HÀ TIÊN KARST", sub: "Karstified Permian Limestone", top: -2820, bot: -3900, thick: 1080, litho: "carbonate", color: "#f472b6", role: "ĐÁ VÔI NỨT NẺ & KARST HÀ TIÊN" }
+          { name: "Thảm thực vật & Đất mặt", top: 2600, bot: 2550, thick: 50, type: "soil", c: "#4ade80", details: { age: "Hiện tại", env: "Sinh quyển.", litho: "Đất mùn rễ cây.", role: "Bảo vệ bề mặt, giữ nước."} },
+          { name: "Vỏ phong hóa Ba dan", top: 2550, bot: 2350, thick: 200, type: "regolith", c: "#ea580c", target: true, details: { age: "Pleistocene", env: "Nhiệt đới.", litho: "Đất đỏ Laterite, Bauxite.", role: "Tài nguyên Bauxite vàng đỏ."} },
+          { name: "Trầm tích lục nguyên", top: 2350, bot: 1750, thick: 600, type: "sandstone", c: "#facc15", details: { age: "Mesozoic", env: "Sông suối.", litho: "Cuội sỏi, cát thô.", role: "Chứa nước ngầm nông cục bộ."} },
+          { name: "Đá phiến biến chất", top: 1750, bot: 800, thick: 950, type: "shale", c: "#64748b", details: { age: "Proterozoic", env: "Biến chất sâu.", litho: "Phiến sét, Gneiss.", role: "Đá gốc nền tảng đồi núi."} },
+          { name: "Khối Magma Granit", top: 800, bot: -1000, thick: 1800, type: "granite", c: "#ec4899", details: { age: "Triassic", env: "Khối vòm (Batholith).", litho: "Granit kết tinh.", role: "Móng vững chắc."} }
         ]
       },
-      continental_mountain: {
-        id: "continental_mountain",
-        name: "Dãy Ngọc Linh - Tây Nguyên (Đồi núi, Thung lũng & Sông suối)",
-        basin_type: "Địa mạo Kiến tạo Lục địa & Đai uốn nếp",
-        location: "Khu vực Tây Nguyên - Nam Trung Bộ (Bạch Mã, Ngọc Linh, Plây Ku, Buôn Ma Thuột)",
-        default_unit: "m",
-        default_range: { max: 2600, min: 0 },
-        summary: "Mặt cắt địa hình đồi núi lục địa chuẩn sách giáo khoa (Ngọc Linh 2598m, Bạch Mã 1221m, sông SêXan, sông Đồng Nai, cao nguyên Ba dan và móng biến chất).",
-        citation: "Bản đồ Địa hình & Địa chất Lục địa Việt Nam (Viện Khoa học Địa chất)",
+      alluvial_water: { id: "alluvial_water", name: "Đồng bằng Sông Cửu Long", loc: "Châu thổ sông", unit: "m", rMin: -600, rMax: 10, 
+        refs: [
+          { text: "Nước ngầm ĐBSCL - Liên đoàn Quy hoạch Thủy văn", url: "https://www.dwrm.gov.vn/" }
+        ],
         layers: [
-          { name: "Thảm cỏ, Cây rừng & Đất thổ nhưỡng", sub: "Organic Topsoil & Forest Canopy", top: 2600, bot: 2550, thick: 50, litho: "soil_forest", color: "#4ade80", role: "Thực vật rừng & Đất mùn mặt" },
-          { name: "Vỏ phong hóa & Đất đỏ Ba dan", sub: "Weathered Basalt & Regolith", top: 2550, bot: 2350, thick: 200, litho: "regolith", color: "#ea580c", role: "Tầng đất phong hóa Ba dan" },
-          { name: "Trầm tích lục nguyên & Cuội sỏi sườn tích", sub: "Colluvial & Fluvial Clastics", top: 2350, bot: 1750, thick: 600, litho: "sandstone", color: "#facc15", role: "Trầm tích lục nguyên thung lũng" },
-          { name: "Đá biến chất cố kết & Phiến sét", sub: "Metamorphic Schist & Gneiss", top: 1750, bot: 800, thick: 950, litho: "shale", color: "#64748b", role: "Đá phiến biến chất cổ" },
-          { name: "Khối Magma Granit Ngọc Linh (Bedrock)", sub: "Crystalline Granitic Pluton", top: 800, bot: -1000, thick: 1800, litho: "granite", color: "#f472b6", role: "Khối vòm Granit kết tinh vững chắc" }
-        ]
-      },
-      alluvial_water: {
-        id: "alluvial_water",
-        name: "Đồng bằng Châu thổ Sông Cửu Long & Địa chất Thủy văn",
-        basin_type: "Châu thổ Bãi bồi Sông & Thủy văn Nước ngầm",
-        location: "Đồng bằng Nam Bộ (Cần Thơ, Vĩnh Long, Cà Mau)",
-        default_unit: "m",
-        default_range: { max: 15, min: -250 },
-        summary: "Mặt cắt địa chất thủy văn châu thổ: tầng chứa nước Holocen nông, tầng sét dẻo cách nước và tầng chứa nước ngầm áp lực Pleistocen.",
-        citation: "Quy chuẩn Khảo sát Địa chất Thủy văn & Địa kỹ thuật Nam Bộ",
-        layers: [
-          { name: "Đất phù sa mặt & Thảm lúa", sub: "Active Alluvial Silt", top: 15, bot: 0, thick: 15, litho: "soil_forest", color: "#84cc16", role: "Phù sa mặt & Đất màu" },
-          { name: "TẦNG CHỨA NƯỚC NÔNG (HOLOCEN)", sub: "Unconfined Shallow Aquifer", top: 0, bot: -30, thick: 30, is_target: true, litho: "water_aquifer", color: "#38bdf8", role: "TẦNG NƯỚC NGẦM NÔNG" },
-          { name: "Tầng sét dẻo cách nước (Aquitard)", sub: "Impermeable Clay Aquitard", top: -30, bot: -75, thick: 45, litho: "shale", color: "#64748b", role: "Tầng sét chắn cách nước" },
-          { name: "TẦNG NƯỚC ÁP LỰC CHÍNH (PLEISTOCEN)", sub: "Confined Regional Aquifer", top: -75, bot: -140, thick: 65, is_target: true, litho: "water_aquifer", color: "#0284c7", role: "TẦNG NƯỚC KHOÁNG ÁP LỰC" },
-          { name: "Cuội sỏi & Móng đá gốc Tiền Đệ Tứ", sub: "Basement Bedrock", top: -140, bot: -300, thick: 160, litho: "granite", color: "#c084fc", role: "Móng đá cứng gốc" }
+          { name: "Lớp đất nông nghiệp", top: 10, bot: 0, thick: 10, type: "soil", c: "#84cc16", details: { age: "Holocene", env: "Bề mặt.", litho: "Phù sa mới màu mỡ.", role: "Trồng lúa, hoa màu."} },
+          { name: "Bùn sét Holocene", top: 0, bot: -80, thick: 80, type: "shale", c: "#94a3b8", details: { age: "Holocene", env: "Đầm lầy, vũng vịnh.", litho: "Sét đen dẻo nhão, chứa than bùn.", role: "Tầng cách nước, nền móng yếu cần xử lý khi xây dựng."} },
+          { name: "Cát sỏi Pleistocene (AQUIFER)", top: -80, bot: -200, thick: 120, type: "sandstone", c: "#38bdf8", target: true, details: { age: "Pleistocene", env: "Sông cổ, thung lũng.", litho: "Cát thô, sỏi cuội.", role: "TẦNG CHỨA NƯỚC NGẦM CHÍNH. Cung cấp nước sinh hoạt cho toàn ĐBSCL."} },
+          { name: "Sét Neogene", top: -200, bot: -450, thick: 250, type: "shale", c: "#cbd5e1", details: { age: "Neogene", env: "Châu thổ.", litho: "Sét bột xen kẹp.", role: "Tầng cách nước dưới."} },
+          { name: "Móng đá cứng", top: -450, bot: -600, thick: 150, type: "granite", c: "#9ca3af", details: { age: "Mesozoic", env: "Nền tảng già.", litho: "Đá xâm nhập rắn.", role: "Nền móng địa chất."} }
         ]
       }
     };
+    DB.phu_quoc = DB.nam_con_son; // (Reuse Nam Con Son for Phu Quoc/Malay Tho Chu as gas-prone placeholder)
 
-    // 2. PROCEDURAL LITHOLOGY & NATURAL TEXTURE GENERATOR
-    // Tạo họa tiết tự nhiên như ảnh tham khảo: Cây cỏ rừng, Sóng biển, Hạt cát, Khối đá nứt, Thớ sét, Móng Granit nứt nẻ
-    class ProceduralTextureEngine {
-      static createSandstonePattern() {
-        const c = document.createElement('canvas');
-        c.width = 32; c.height = 32;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = '#fef3c7'; ctx.fillRect(0, 0, 32, 32);
-        ctx.fillStyle = 'rgba(180, 83, 9, 0.25)';
-        // Random sand dots
-        const dots = [[4,6],[12,14],[20,8],[28,24],[8,26],[24,18],[16,28],[2,18],[18,2]];
-        dots.forEach(([x,y]) => { ctx.fillRect(x, y, 2, 2); });
-        return c;
-      }
-
-      static createShalePattern() {
-        const c = document.createElement('canvas');
-        c.width = 40; c.height = 16;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = '#dcfce7'; ctx.fillRect(0, 0, 40, 16);
-        ctx.strokeStyle = 'rgba(22, 101, 34, 0.22)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, 4); ctx.lineTo(18, 4);
-        ctx.moveTo(22, 4); ctx.lineTo(40, 4);
-        ctx.moveTo(8, 12); ctx.lineTo(32, 12);
-        ctx.stroke();
-        return c;
-      }
-
-      static createCarbonatePattern() {
-        const c = document.createElement('canvas');
-        c.width = 40; c.height = 24;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = '#e0f2fe'; ctx.fillRect(0, 0, 40, 24);
-        ctx.strokeStyle = 'rgba(3, 105, 161, 0.3)';
-        ctx.lineWidth = 1.2;
-        ctx.strokeRect(0, 0, 40, 12);
-        ctx.strokeRect(20, 12, 40, 12);
-        ctx.strokeRect(-20, 12, 40, 12);
-        return c;
-      }
-
-      static createGraniteFracturePattern() {
-        const c = document.createElement('canvas');
-        c.width = 60; c.height = 60;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = '#fce7f3'; ctx.fillRect(0, 0, 60, 60);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.lineWidth = 1.5;
-        // White joint fracture veins like reference photo 4
-        ctx.beginPath();
-        ctx.moveTo(0, 15); ctx.lineTo(25, 30); ctx.lineTo(40, 20); ctx.lineTo(60, 45);
-        ctx.moveTo(10, 60); ctx.lineTo(30, 40); ctx.lineTo(55, 60);
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(190, 24, 93, 0.25)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        return c;
-      }
-
-      // Vẽ cây thông & cây rừng nhấp nhô dọc sườn đồi (giống ảnh tham khảo 2 & 4)
-      static drawMountainTrees(ctx, points, toPxX, toPxY) {
-        ctx.save();
-        const step = Math.max(2, Math.floor(points.length / 28));
-        for (let i = 2; i < points.length - 2; i += step) {
-          const pt = points[i];
-          const x = toPxX(pt.km);
-          const y = toPxY(pt.val);
-          
-          // Randomize tree type: Thông (Pine) hoặc Tán tròn (Deciduous)
-          const isPine = (i % 3) !== 0;
-          const treeHeight = 16 + ((i * 7) % 12);
-
-          if (isPine) {
-            // Thân cây
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(x - 1, y - treeHeight * 0.3, 2, treeHeight * 0.3);
-            // Tán thông 3 tầng nhọn
-            ctx.fillStyle = (i % 2 === 0) ? '#166534' : '#15803d';
-            for (let t = 0; t < 3; t++) {
-              ctx.beginPath();
-              const ty = y - treeHeight * 0.3 - t * (treeHeight * 0.25);
-              const tw = 7 - t * 1.5;
-              ctx.moveTo(x, ty - treeHeight * 0.35);
-              ctx.lineTo(x - tw, ty);
-              ctx.lineTo(x + tw, ty);
-              ctx.closePath();
-              ctx.fill();
-            }
-          } else {
-            // Cây tán tròn
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(x - 1.5, y - treeHeight * 0.4, 3, treeHeight * 0.4);
-            ctx.fillStyle = '#22c55e';
-            ctx.beginPath();
-            ctx.arc(x, y - treeHeight * 0.65, 7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#4ade80';
-            ctx.beginPath();
-            ctx.arc(x - 2, y - treeHeight * 0.75, 4, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // Khóm hoa dại / bụi cỏ li ti
-          ctx.fillStyle = (i % 2 === 0) ? '#f43f5e' : '#fbbf24';
-          ctx.beginPath();
-          ctx.arc(x + 5, y - 2, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      // Vẽ sóng gợn lăn tăn trên mặt nước biển / hồ
-      static drawWaterWaves(ctx, x1, x2, y) {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.lineWidth = 1.5;
-        for (let x = x1 + 10; x < x2 - 20; x += 32) {
-          ctx.beginPath();
-          ctx.arc(x, y + 2, 6, Math.PI * 1.1, Math.PI * 1.9);
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-    }
-
-    // 3. VISION SAMPLER (ĐƯỢC TINH GỌN, KHÔNG CHÈN CHỮ LÊN ẢNH ĐẦU VÀO)
-    class CleanVisionSampler {
-      constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
+    // 2. AUTO VISION SAMPLER (Đọc ảnh ra mảng normProfile 0.0 - 1.0)
+    class AutoVisionSampler {
+      constructor() {
+        this.canvas = document.getElementById('map-canvas');
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-        this.image = new Image();
-        this.isLoaded = false;
-        this.pointA = { x: 0, y: 0, isDragging: false };
-        this.pointB = { x: 0, y: 0, isDragging: false };
-        this.handleRadius = 9;
-        this.scaleKm = 11.8;
-        this.scaleRange = { maxVal: -2800, minVal: -4600, unit: 'mTVDss' };
-        
-        this.colorStops = [
-          { ratio: 1.00, r: 235, g: 30,  b: 30  },
-          { ratio: 0.85, r: 245, g: 130, b: 20  },
-          { ratio: 0.70, r: 240, g: 230, b: 30  },
-          { ratio: 0.50, r: 50,  g: 220, b: 70  },
-          { ratio: 0.35, r: 30,  g: 210, b: 210 },
-          { ratio: 0.15, r: 30,  g: 80,  b: 220 },
-          { ratio: 0.00, r: 150, g: 20,  b: 210 }
-        ];
-
-        this.onLineChange = null;
+        this.img = new Image(); this.isLoaded = false;
+        this.pA = {x:0, y:0, drag:false}; this.pB = {x:0, y:0, drag:false};
+        this.onUpdate = null;
         this._initEvents();
       }
-
-      setRange(maxVal, minVal, unit = 'm') {
-        this.scaleRange.maxVal = parseFloat(maxVal);
-        this.scaleRange.minVal = parseFloat(minVal);
-        this.scaleRange.unit = unit;
-        if (this.isLoaded && this.onLineChange) this.onLineChange(this.sampleProfile());
-      }
-
-      loadImage(src, callback) {
-        this.image.crossOrigin = "anonymous";
-        this.image.onload = () => {
-          this.canvas.width = this.image.width;
-          this.canvas.height = this.image.height;
-          this.isLoaded = true;
-          this.autoAlignLine();
-          this.redraw();
-          if (callback) callback();
-          if (this.onLineChange) this.onLineChange(this.sampleProfile());
+      load(src, cb) {
+        this.img.crossOrigin = "anonymous";
+        this.img.onload = () => {
+          this.canvas.width = this.img.width; this.canvas.height = this.img.height;
+          this.pA.x = this.img.width * 0.15; this.pA.y = this.img.height * 0.35;
+          this.pB.x = this.img.width * 0.85; this.pB.y = this.img.height * 0.65;
+          this.isLoaded = true; this.redraw();
+          if(cb) cb();
+          if(this.onUpdate) this.onUpdate(this.sample());
         };
-        this.image.src = src;
+        this.img.src = src;
       }
-
-      // Căn tuyến A-B tự động qua tâm ảnh
-      autoAlignLine() {
-        if (!this.isLoaded) return;
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        this.pointA.x = Math.round(w * 0.15);
-        this.pointA.y = Math.round(h * 0.35);
-        this.pointB.x = Math.round(w * 0.88);
-        this.pointB.y = Math.round(h * 0.65);
-      }
-
       redraw() {
-        if (!this.isLoaded) return;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.drawImage(this.image, 0, 0);
-
-        // Nét cắt A-B thanh mảnh, tinh tế (không rườm rà)
-        this.ctx.beginPath();
-        this.ctx.setLineDash([6, 5]);
-        this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 2.5;
-        this.ctx.moveTo(this.pointA.x, this.pointA.y);
-        this.ctx.lineTo(this.pointB.x, this.pointB.y);
-        this.ctx.stroke();
-
-        this.ctx.strokeStyle = 'rgba(15, 23, 42, 0.7)';
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
-        this.ctx.setLineDash([]);
-
-        // Vẽ 2 điểm tròn cầm nắm A & B
-        this._drawPin(this.pointA, '#0284c7', 'A');
-        this._drawPin(this.pointB, '#d946ef', 'B');
-      }
-
-      _drawPin(pt, color, label) {
-        this.ctx.beginPath();
-        this.ctx.arc(pt.x, pt.y, this.handleRadius, 0, Math.PI * 2);
-        this.ctx.fillStyle = color;
-        this.ctx.fill();
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeStyle = '#ffffff';
-        this.ctx.stroke();
-
-        this.ctx.font = 'bold 10px "JetBrains Mono", monospace';
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(label, pt.x, pt.y + 3.5);
-      }
-
-      _initEvents() {
-        const getPos = (e) => {
-          const r = this.canvas.getBoundingClientRect();
-          return {
-            x: (e.clientX - r.left) * (this.canvas.width / r.width),
-            y: (e.clientY - r.top) * (this.canvas.height / r.height)
-          };
+        if(!this.isLoaded) return;
+        this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this.img, 0, 0);
+        this.ctx.beginPath(); this.ctx.setLineDash([5,5]); this.ctx.strokeStyle = '#fff'; this.ctx.lineWidth = 2;
+        this.ctx.moveTo(this.pA.x, this.pA.y); this.ctx.lineTo(this.pB.x, this.pB.y); this.ctx.stroke(); this.ctx.setLineDash([]);
+        const drawH = (p, l) => {
+          this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 8, 0, Math.PI*2);
+          this.ctx.fillStyle = l==='A'?'#0ea5e9':'#8b5cf6'; this.ctx.fill(); this.ctx.stroke();
         };
-        const isNear = (p1, p2, dist) => Math.hypot(p1.x - p2.x, p1.y - p2.y) <= dist;
-
-        this.canvas.addEventListener('mousedown', (e) => {
-          const p = getPos(e);
-          if (isNear(p, this.pointA, this.handleRadius * 2)) this.pointA.isDragging = true;
-          else if (isNear(p, this.pointB, this.handleRadius * 2)) this.pointB.isDragging = true;
-        });
-
-        window.addEventListener('mousemove', (e) => {
-          if (!this.pointA.isDragging && !this.pointB.isDragging) return;
-          const p = getPos(e);
-          const cx = Math.max(0, Math.min(this.canvas.width, p.x));
-          const cy = Math.max(0, Math.min(this.canvas.height, p.y));
-
-          if (this.pointA.isDragging) { this.pointA.x = cx; this.pointA.y = cy; }
-          else if (this.pointB.isDragging) { this.pointB.x = cx; this.pointB.y = cy; }
-
-          this.redraw();
-          if (this.onLineChange) this.onLineChange(this.sampleProfile());
-        });
-
-        window.addEventListener('mouseup', () => {
-          if (this.pointA.isDragging || this.pointB.isDragging) {
-            this.pointA.isDragging = false;
-            this.pointB.isDragging = false;
-            if (this.onLineChange) this.onLineChange(this.sampleProfile());
-          }
-        });
+        drawH(this.pA, 'A'); drawH(this.pB, 'B');
       }
-
-      _colorToValue(r, g, b) {
-        let bestDist = Infinity, matchedRatio = 0.5;
-        for (const s of this.colorStops) {
-          const d = Math.hypot(r - s.r, g - s.g, b - s.b);
-          if (d < bestDist) { bestDist = d; matchedRatio = s.ratio; }
-        }
-        return Math.round(this.scaleRange.minVal + matchedRatio * (this.scaleRange.maxVal - this.scaleRange.minVal));
-      }
-
-      sampleProfile(numSamples = 160) {
-        if (!this.isLoaded) return [];
-        const dx = (this.pointB.x - this.pointA.x) / (numSamples - 1);
-        const dy = (this.pointB.y - this.pointA.y) / (numSamples - 1);
-        const pixDist = Math.hypot(this.pointB.x - this.pointA.x, this.pointB.y - this.pointA.y);
-        const kmTotal = Math.max(1, (pixDist / 850) * 11.8);
-        this.scaleKm = kmTotal;
-
-        const imgData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+      sample(num = 120) {
+        if(!this.isLoaded) return [];
+        const dx = (this.pB.x - this.pA.x)/(num-1), dy = (this.pB.y - this.pA.y)/(num-1);
+        const data = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height).data;
         const raw = [];
-        let prevVal = null;
-
-        for (let i = 0; i < numSamples; i++) {
-          const cx = Math.round(this.pointA.x + dx * i);
-          const cy = Math.round(this.pointA.y + dy * i);
-          const km = (i / (numSamples - 1)) * kmTotal;
-          let val = (this.scaleRange.maxVal + this.scaleRange.minVal) / 2;
-
-          if (cx >= 0 && cx < this.canvas.width && cy >= 0 && cy < this.canvas.height) {
-            const idx = (cy * this.canvas.width + cx) * 4;
-            const r = imgData[idx], g = imgData[idx+1], b = imgData[idx+2];
-            if (!(Math.abs(r-g) < 15 && Math.abs(g-b) < 15)) {
-              val = this._colorToValue(r, g, b);
-            } else if (prevVal !== null) {
-              val = prevVal;
-            }
+        for(let i=0; i<num; i++) {
+          const cx = Math.round(this.pA.x + dx*i), cy = Math.round(this.pA.y + dy*i);
+          let bright = 0.5;
+          if(cx>=0 && cx<this.canvas.width && cy>=0 && cy<this.canvas.height) {
+            const idx = (cy*this.canvas.width + cx)*4;
+            bright = (data[idx]*0.299 + data[idx+1]*0.587 + data[idx+2]*0.114) / 255;
           }
-          raw.push({ index: i, km, x: cx, y: cy, value: val });
-          prevVal = val;
+          raw.push(1.0 - bright);
         }
-
-        // Multi-pass Gaussian smoothing
-        let data = raw;
-        for (let pass = 0; pass < 2; pass++) {
-          const smoothed = [];
-          for (let i = 0; i < data.length; i++) {
-            let sum = 0, weight = 0;
-            for (let j = Math.max(0, i - 6); j <= Math.min(data.length - 1, i + 6); j++) {
-              const w = Math.exp(-0.5 * Math.pow((i - j) / 3.5, 2));
-              sum += data[j].value * w;
-              weight += w;
-            }
-            smoothed.push({ ...data[i], value: Math.round(sum / weight) });
+        const sm = [];
+        for(let i=0; i<num; i++) {
+          let s=0, w=0;
+          for(let j=Math.max(0,i-3); j<=Math.min(num-1, i+3); j++) {
+            const d = Math.exp(-0.5 * Math.pow((i-j)/2.0, 2));
+            s += raw[j]*d; w+=d;
           }
-          data = smoothed;
+          sm.push(s/w);
         }
-        return data;
+        return sm;
+      }
+      _initEvents() {
+        const getP = e => { const r=this.canvas.getBoundingClientRect(); return {x:(e.clientX-r.left)*(this.canvas.width/r.width), y:(e.clientY-r.top)*(this.canvas.height/r.height)}; };
+        this.canvas.addEventListener('mousedown', e => { const p=getP(e); if(Math.hypot(p.x-this.pA.x, p.y-this.pA.y)<16) this.pA.drag=true; else if(Math.hypot(p.x-this.pB.x, p.y-this.pB.y)<16) this.pB.drag=true; });
+        window.addEventListener('mousemove', e => { if(this.pA.drag || this.pB.drag) { const p=getP(e); if(this.pA.drag){this.pA.x=p.x; this.pA.y=p.y;}else{this.pB.x=p.x; this.pB.y=p.y;} this.redraw(); if(this.onUpdate) this.onUpdate(this.sample()); } });
+        window.addEventListener('mouseup', () => { this.pA.drag = false; this.pB.drag = false; });
       }
     }
 
-    // 4. NATURAL 2D CROSS-SECTION RENDERER (GOOGLE EARTH / TEXTBOOK STYLE)
-    // Tái hiện sống động theo 4 ảnh tham khảo của anh Isaac: thoáng đãng, sắc nét, có cây cối, gợn sóng, vân đá, chú thích chiều sâu
-    class NaturalCrossSectionEngine {
-      constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d');
-        
-        // Cố định tỷ lệ độ phân giải cao 2400 x 1200 để hình ảnh cực kỳ sắc nét
-        this.canvas.width = 2400;
-        this.canvas.height = 1250;
+    // --- PROCEDURAL TEXTURES CHO 2 ENGINE ---
+    const Pats = { sand: null, carb: null, shale: null };
+    function initPats(ctx) {
+      if(Pats.sand) return;
+      const c1 = document.createElement('canvas'); c1.width=32; c1.height=32; const ctx1 = c1.getContext('2d');
+      ctx1.fillStyle='#fff'; ctx1.fillRect(0,0,32,32); ctx1.fillStyle='rgba(0,0,0,0.15)';
+      for(let i=0;i<20;i++) ctx1.fillRect(Math.random()*32, Math.random()*32, 2, 2);
+      Pats.sand = ctx.createPattern(c1, 'repeat');
 
-        this.preset = GEOLOGY_DATABASE.cuu_long;
-        this.profile = [];
-        this.config = {
-          ve: 2.5,
-          owc: -3620,
-          showTextures: true,
-          showDepthBadges: true,
-          showFaults: true,
-          showOil: true,
-          unit: 'mTVDss'
-        };
+      const c2 = document.createElement('canvas'); c2.width=40; c2.height=20; const ctx2 = c2.getContext('2d');
+      ctx2.fillStyle='#fff'; ctx2.fillRect(0,0,40,20); ctx2.strokeStyle='rgba(0,0,0,0.2)'; ctx2.strokeRect(0,0,40,10); ctx2.strokeRect(20,10,40,10); ctx2.strokeRect(-20,10,40,10);
+      Pats.carb = ctx.createPattern(c2, 'repeat');
+      
+      const c3 = document.createElement('canvas'); c3.width=40; c3.height=16; const ctx3 = c3.getContext('2d');
+      ctx3.fillStyle='#fff'; ctx3.fillRect(0,0,40,16); ctx3.strokeStyle='rgba(0,0,0,0.1)'; ctx3.beginPath(); ctx3.moveTo(0,4); ctx3.lineTo(20,4); ctx3.moveTo(10,12); ctx3.lineTo(30,12); ctx3.stroke();
+      Pats.shale = ctx.createPattern(c3, 'repeat');
+    }
+    
+    function shade(color, percent) {
+      let R = parseInt(color.substring(1,3),16), G = parseInt(color.substring(3,5),16), B = parseInt(color.substring(5,7),16);
+      R = parseInt(R * (100 + percent) / 100); G = parseInt(G * (100 + percent) / 100); B = parseInt(B * (100 + percent) / 100);
+      R = R<255?R:255; G = G<255?G:255; B = B<255?B:255;
+      const RR = (R.toString(16).length==1?"0"+R.toString(16):R.toString(16));
+      const GG = (G.toString(16).length==1?"0"+G.toString(16):G.toString(16));
+      const BB = (B.toString(16).length==1?"0"+B.toString(16):B.toString(16));
+      return "#"+RR+GG+BB;
+    }
 
-        // Cache procedural patterns
-        this.patSandstone = null;
-        this.patShale = null;
-        this.patCarbonate = null;
-        this.patGranite = null;
+    // 3. MAIN 2D CROSS-SECTION ENGINE (THE HERO VIEW)
+    class Main2DEngine {
+      constructor() {
+        this.cvs = document.getElementById('cross-section-canvas');
+        this.ctx = this.cvs.getContext('2d');
+        this.cvs.width = 2400; this.cvs.height = 1250;
+        this.preset = DB.cuu_long;
+        this.normProfile = new Array(120).fill(0.5);
+        this.cfg = { ve: 2.5, tex: true, badge: true, water: true, oil: true };
+        this.hitZones = [];
+        this.selectedLayer = -1;
+        this.hoveredLayer = -1;
+        this._initClick();
       }
-
-      _initPatterns() {
-        if (!this.patSandstone) {
-          this.patSandstone = this.ctx.createPattern(ProceduralTextureEngine.createSandstonePattern(), 'repeat');
-          this.patShale = this.ctx.createPattern(ProceduralTextureEngine.createShalePattern(), 'repeat');
-          this.patCarbonate = this.ctx.createPattern(ProceduralTextureEngine.createCarbonatePattern(), 'repeat');
-          this.patGranite = this.ctx.createPattern(ProceduralTextureEngine.createGraniteFracturePattern(), 'repeat');
-        }
-      }
-
-      setPreset(preset) {
-        this.preset = preset;
-        this.config.unit = preset.default_unit || 'm';
-        this.render();
-      }
-
-      setProfile(profile) {
-        this.profile = profile;
-        this.render();
-      }
-
-      updateConfig(conf) {
-        this.config = { ...this.config, ...conf };
-        this.render();
+      
+      _initClick() {
+        const getP = e => { const r=this.cvs.getBoundingClientRect(); return {x:(e.clientX-r.left)*(this.cvs.width/r.width), y:(e.clientY-r.top)*(this.cvs.height/r.height)}; };
+        this.cvs.addEventListener('mousemove', e => {
+          const pos = getP(e); let h = -1;
+          for(let i=this.hitZones.length-1; i>=0; i--) { if(this.ctx.isPointInPath(this.hitZones[i].path, pos.x, pos.y)) { h = this.hitZones[i].idx; break; } }
+          if(this.hoveredLayer !== h) { this.hoveredLayer = h; this.render(); }
+        });
+        this.cvs.addEventListener('click', e => {
+          if(this.hoveredLayer !== -1) {
+            this.selectedLayer = this.hoveredLayer; this.render();
+            sync3DSelection(this.selectedLayer);
+            openDetailedAnalysis(this.preset, this.selectedLayer);
+          }
+        });
       }
 
       render() {
-        const ctx = this.ctx;
-        const W = this.canvas.width;
-        const H = this.canvas.height;
-        ctx.clearRect(0, 0, W, H);
-        this._initPatterns();
+        this.ctx.clearRect(0,0,2400,1250);
+        this.ctx.fillStyle = '#ffffff'; this.ctx.fillRect(0,0,2400,1250);
+        this.hitZones = []; initPats(this.ctx);
 
-        // Nền giấy trắng ngà tinh tế (Clean textbook style)
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, W, H);
+        const M = {t:120, b:120, l:200, r:100};
+        const pW = 2400 - M.l - M.r, pH = 1250 - M.t - M.b;
+        const pMin = this.preset.rMin, pMax = this.preset.rMax;
+        const N = this.normProfile.length;
+        const isTopo = this.preset.id === 'continental_mountain';
 
-        // Lề rộng rãi, không bao giờ lo chữ bị chèn ép hay co cụm
-        const M = { top: 130, right: 100, bottom: 120, left: 210 };
-        const pW = W - M.left - M.right;
-        const pH = H - M.top - M.bottom;
+        const hz = [];
+        for(let l=0; l<=this.preset.layers.length; l++) hz.push([]);
 
-        if (!this.profile || this.profile.length === 0) {
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '600 24px "Plus Jakarta Sans", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('⬅ Kéo thả hoặc chọn ảnh bản đồ cấu trúc bên trái để khởi tạo lát cắt tự nhiên', W / 2, H / 2);
-          return;
-        }
+        let yT = isTopo ? 3000 : 100, yB = isTopo ? -1500 : -5500;
+        const toY = v => M.t + ((yT - v)/(yT - yB)) * pH;
+        const toX = i => M.l + (i/(N-1)) * pW;
 
-        const N = this.profile.length;
-        const layers = this.preset.layers || [];
-        const isTopography = this.preset.id === 'continental_mountain';
-        const values = this.profile.map(p => p.value);
-        const maxVal = Math.max(...values);
-        const minVal = Math.min(...values);
-        const maxKm = this.profile[N - 1].km || 11.8;
-
-        // Trục đứng Y (Độ sâu / Cao trình)
-        let yTop, yBot;
-        if (isTopography) {
-          yTop = Math.ceil((maxVal + 400) / 500) * 500;
-          yBot = Math.floor((minVal - 1500) / 500) * 500;
-        } else {
-          yTop = 100;
-          yBot = Math.min(-5600, Math.floor((minVal - 1000) / 500) * 500);
-        }
-
-        const toX = (km) => M.left + (km / maxKm) * pW;
-        const toY = (v) => M.top + ((yTop - v) / (yTop - yBot)) * pH;
-
-        const targetIdx = layers.findIndex(l => l.is_target) !== -1 ? layers.findIndex(l => l.is_target) : Math.floor(layers.length / 2);
-
-        // Các đới đứt gãy thực tế
-        const faults = [
-          { km: maxKm * 0.22, name: "Đứt gãy F1 (Tây Bắc)", throwM: 220, dip: 68 },
-          { km: maxKm * 0.48, name: "Đứt gãy F2 (Lạc Đà Biên)", throwM: 300, dip: 65 },
-          { km: maxKm * 0.78, name: "Đứt gãy F3 (Trũng Sâu Đông Nam)", throwM: -450, dip: -66 }
-        ];
-
-        // 1. TÍNH TOÁN CÁC ĐƯỜNG RANH GIỚI ĐỊA TẦNG (HORIZONS)
-        const horizons = [];
-        for (let l = 0; l <= layers.length; l++) horizons.push([]);
-
-        for (let i = 0; i < N; i++) {
-          const p = this.profile[i];
-          const km = p.km;
-          const refVal = p.value;
-
-          let fOffset = 0;
-          if (this.config.showFaults && !isTopography) {
-            if (km >= faults[0].km && km < faults[1].km) fOffset = -150;
-            else if (km >= faults[1].km && km < faults[2].km) fOffset = 140; // Nâng vòm
-            else if (km >= faults[2].km) fOffset = -420; // Sụt trũng
-          }
-
-          if (isTopography) {
-            horizons[0].push({ km, val: refVal });
+        for(let i=0; i<N; i++) {
+          const refVal = pMax - this.normProfile[i] * (pMax - pMin);
+          if(isTopo) {
             let cur = refVal;
-            for (let l = 0; l < layers.length; l++) {
-              cur -= layers[l].thick;
-              horizons[l + 1].push({ km, val: Math.max(cur, yBot) });
-            }
+            hz[0].push(cur);
+            for(let l=0; l<this.preset.layers.length; l++) { cur -= this.preset.layers[l].thick; hz[l+1].push(cur); }
           } else {
-            // Nước biển
-            horizons[0].push({ km, val: 0 });
-            horizons[1].push({ km, val: -layers[0].thick });
-
-            const ratio = (refVal - this.preset.default_range.max) / (this.preset.default_range.min - this.preset.default_range.max);
-            let curTop = -layers[0].thick;
-
-            for (let l = 1; l < targetIdx; l++) {
-              const comp = l / targetIdx;
-              const hz = curTop - layers[l].thick * (1 + ratio * 0.28 * comp) + fOffset * (comp * 0.4);
-              horizons[l + 1].push({ km, val: hz });
-              curTop = hz;
-            }
-
-            const adjTarget = refVal + fOffset * 0.6;
-            horizons[targetIdx].push({ km, val: adjTarget });
-            horizons[targetIdx + 1].push({ km, val: adjTarget - layers[targetIdx].thick });
-
-            let curBot = adjTarget - layers[targetIdx].thick;
-            for (let l = targetIdx + 1; l < layers.length; l++) {
-              curBot -= layers[l].thick * (1 + (1 - ratio) * 0.15);
-              horizons[l + 1].push({ km, val: Math.max(curBot, yBot) });
-            }
+            hz[0].push(0);
+            let cur = -this.preset.layers[0].thick;
+            hz[1].push(cur);
+            for(let l=1; l<this.preset.layers.length; l++) { cur -= this.preset.layers[l].thick * (1 + this.normProfile[i]*0.2); hz[l+1].push(cur); }
           }
         }
 
-        // 2. KHUNG LƯỚI TỌA ĐỘ TRẮC DỌC (AIRY & CLEAN)
-        ctx.strokeStyle = '#f1f5f9';
-        ctx.lineWidth = 1.2;
-        const stepZ = (yTop - yBot) > 4000 ? 1000 : ((yTop - yBot) > 2000 ? 500 : 250);
-        ctx.font = '600 15px "JetBrains Mono", monospace';
-
-        for (let v = Math.floor(yTop / stepZ) * stepZ; v >= yBot; v -= stepZ) {
-          const y = toY(v);
-          if (y >= M.top && y <= M.top + pH) {
-            ctx.beginPath(); ctx.moveTo(M.left, y); ctx.lineTo(M.left + pW, y); ctx.stroke();
-            ctx.fillStyle = '#64748b';
-            ctx.textAlign = 'right';
-            ctx.fillText(`${v} ${this.config.unit}`, M.left - 15, y + 5);
+        // Draw Grids
+        this.ctx.strokeStyle = '#f1f5f9'; this.ctx.lineWidth = 1; this.ctx.font = '600 15px "JetBrains Mono"';
+        for(let v = yB; v<=yT; v+=500) {
+          const yy = toY(v); if(yy>=M.t && yy<=M.t+pH) {
+            this.ctx.beginPath(); this.ctx.moveTo(M.l, yy); this.ctx.lineTo(M.l+pW, yy); this.ctx.stroke();
+            this.ctx.fillStyle='#64748b'; this.ctx.textAlign='right'; this.ctx.fillText(v+'m', M.l-10, yy+5);
           }
         }
 
-        const stepKm = maxKm > 20 ? 5 : (maxKm > 8 ? 2 : 1);
-        for (let km = 0; km <= maxKm; km += stepKm) {
-          const x = toX(km);
-          ctx.beginPath(); ctx.moveTo(x, M.top); ctx.lineTo(x, M.top + pH); ctx.stroke();
-          ctx.fillStyle = '#64748b';
-          ctx.textAlign = 'center';
-          ctx.fillText(`${km.toFixed(1)} km`, x, M.top + pH + 30);
-        }
+        // Draw Layers
+        for(let l=this.preset.layers.length-1; l>=0; l--) {
+          const path = new Path2D();
+          for(let i=0; i<N; i++) { const ptX = toX(i), ptY = toY(hz[l][i]); if(i===0) path.moveTo(ptX, ptY); else path.lineTo(ptX, ptY); }
+          for(let i=N-1; i>=0; i--) path.lineTo(toX(i), toY(hz[l+1][i]));
+          path.closePath();
 
-        // 3. TÔ CÁC LỚP ĐỊA TẦNG VỚI GRADIENT TỰ NHIÊN & VÂN THẠCH HỌC
-        for (let l = layers.length - 1; l >= 0; l--) {
-          const topPts = horizons[l];
-          const botPts = horizons[l + 1];
-          const layer = layers[l];
-
-          ctx.save();
-          ctx.beginPath();
-          for (let i = 0; i < topPts.length; i++) {
-            const x = toX(topPts[i].km), y = toY(topPts[i].val);
-            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          const layer = this.preset.layers[l];
+          let color = layer.c;
+          if(this.selectedLayer === l) color = shade(color, 25);
+          else if(this.hoveredLayer === l) color = shade(color, 10);
+          
+          this.ctx.fillStyle = color; this.ctx.fill(path);
+          if(this.cfg.tex) {
+            this.ctx.save(); this.ctx.globalAlpha = 0.4;
+            if(layer.type==='sandstone') this.ctx.fillStyle=Pats.sand;
+            else if(layer.type==='carbonate') this.ctx.fillStyle=Pats.carb;
+            else if(layer.type==='shale') this.ctx.fillStyle=Pats.shale;
+            this.ctx.clip(path); this.ctx.fill(); this.ctx.restore();
           }
-          for (let i = botPts.length - 1; i >= 0; i--) {
-            ctx.lineTo(toX(botPts[i].km), toY(botPts[i].val));
-          }
-          ctx.closePath();
-
-          // Màu nền cơ bản
-          ctx.fillStyle = layer.color;
-          ctx.fill();
-
-          // Phủ họa tiết vân thạch học tự nhiên nếu bật
-          if (this.config.showTextures) {
-            ctx.globalAlpha = 0.45;
-            if (layer.litho === 'sandstone') ctx.fillStyle = this.patSandstone;
-            else if (layer.litho === 'shale') ctx.fillStyle = this.patShale;
-            else if (layer.litho === 'carbonate') ctx.fillStyle = this.patCarbonate;
-            else if (layer.litho === 'granite') ctx.fillStyle = this.patGranite;
-            else if (layer.litho === 'water') {
-              const waterGrad = ctx.createLinearGradient(0, toY(0), 0, toY(-layer.thick));
-              waterGrad.addColorStop(0, '#38bdf8');
-              waterGrad.addColorStop(1, '#0284c7');
-              ctx.fillStyle = waterGrad;
-            }
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
-          }
-
-          // Viền nóc tầng sắc sảo
-          ctx.strokeStyle = '#334155';
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-          ctx.restore();
+          this.ctx.strokeStyle = this.selectedLayer === l ? '#fff' : shade(layer.c, -40);
+          this.ctx.lineWidth = this.selectedLayer === l ? 3 : 1.5;
+          this.ctx.stroke(path);
+          this.hitZones.push({path, idx: l});
         }
 
-        // 4. VẼ VẢI THỰC VẬT & CÂY RỪNG (ẢNH THAM KHẢO 2 & 4)
-        if (isTopography && this.config.showTextures) {
-          ProceduralTextureEngine.drawMountainTrees(ctx, horizons[0], toX, toY);
+        // Draw OWC Flat Spot (Nếu bể trầm tích)
+        if(this.cfg.oil && !isTopo) {
+          const owc = -3600;
+          this.ctx.beginPath(); this.ctx.setLineDash([10,5]); this.ctx.strokeStyle='#ef4444'; this.ctx.lineWidth=3;
+          this.ctx.moveTo(M.l + pW*0.1, toY(owc)); this.ctx.lineTo(M.l + pW*0.9, toY(owc)); this.ctx.stroke(); this.ctx.setLineDash([]);
+          this.ctx.fillStyle='#ef4444'; this.ctx.font='bold 16px "JetBrains Mono"'; this.ctx.textAlign='left'; this.ctx.fillText("OWC: -3600m", M.l + pW*0.9 + 10, toY(owc)+5);
         }
 
-        // Sóng nước biển trên mặt nước
-        if (!isTopography && layers[0].litho === 'water') {
-          ProceduralTextureEngine.drawWaterWaves(ctx, M.left, M.left + pW, toY(0));
-        }
-
-        // 5. THÂN DẦU KHÍ PHÁT SÁNG & RANH GIỚI TIẾP XÚC DẦU - NƯỚC (OWC)
-        if (this.config.showOil && !isTopography) {
-          const owc = this.config.owc;
-          const tTop = horizons[targetIdx];
-          const tBot = horizons[targetIdx + 1];
-          const trapT = [], trapB = [];
-
-          for (let i = 0; i < N; i++) {
-            if (tTop[i].val > owc) {
-              trapT.push(tTop[i]);
-              trapB.push({ km: tTop[i].km, val: Math.max(tBot[i].val, owc) });
-            }
-          }
-
-          if (trapT.length > 2) {
-            ctx.save();
-            ctx.beginPath();
-            for (let i = 0; i < trapT.length; i++) {
-              const x = toX(trapT[i].km), y = toY(trapT[i].val);
-              if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-            }
-            for (let i = trapB.length - 1; i >= 0; i--) {
-              ctx.lineTo(toX(trapB[i].km), toY(trapB[i].val));
-            }
-            ctx.closePath();
-
-            // Vàng hổ phách phát quang tự nhiên
-            const oilGrad = ctx.createLinearGradient(0, toY(maxVal), 0, toY(owc));
-            oilGrad.addColorStop(0, '#f59e0b');
-            oilGrad.addColorStop(1, '#b45309');
-            ctx.fillStyle = oilGrad;
-            ctx.fill();
-
-            ctx.strokeStyle = '#d97706';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.restore();
-
-            // Đường phẳng tiếp xúc Dầu - Nước (OWC Flat Spot)
-            const ox1 = toX(trapT[0].km - 0.25);
-            const ox2 = toX(trapT[trapT.length - 1].km + 0.25);
-            const oy = toY(owc);
-            ctx.beginPath();
-            ctx.setLineDash([12, 6]);
-            ctx.strokeStyle = '#dc2626';
-            ctx.lineWidth = 3;
-            ctx.moveTo(ox1, oy); ctx.lineTo(ox2, oy);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Thẻ nhãn OWC to rõ
-            ctx.fillStyle = '#b91c1c';
-            ctx.font = 'bold 16px "JetBrains Mono", monospace';
-            ctx.textAlign = 'left';
-            ctx.fillText(`OWC Contact: ${owc} ${this.config.unit}`, ox2 + 15, oy + 5);
-          }
-        }
-
-        // 6. CÁC ĐỚI ĐỨT GÃY KIẾN TẠO
-        if (this.config.showFaults && !isTopography) {
-          faults.forEach(f => {
-            const topY = toY(-250);
-            const botY = toY(yBot + 250);
-            const topFx = toX(f.km);
-            const botFx = topFx + 55 * (f.dip > 0 ? 1 : -1);
-
-            ctx.beginPath();
-            ctx.strokeStyle = '#dc2626';
-            ctx.lineWidth = 2.5;
-            ctx.setLineDash([14, 6]);
-            ctx.moveTo(topFx, topY); ctx.lineTo(botFx, botY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Nhãn đứt gãy
-            ctx.fillStyle = '#dc2626';
-            ctx.font = 'bold 14px "JetBrains Mono", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(f.name, topFx, topY - 14);
-
-            // Mũi tên trượt
-            const my = (topY + botY) / 2;
-            ctx.font = '16px sans-serif';
-            ctx.fillText(f.throwM > 0 ? '⬇ ⬆' : '⬆ ⬇', topFx + 25 * (f.dip > 0 ? 1 : -1), my);
-          });
-        }
-
-        // 7. CHÚ THÍCH ĐỘ SÂU & CHIỀU DÀY TỪNG TẦNG (AIRY BADGES NHƯ YÊU CẦU ANH ISAAC)
-        if (this.config.showDepthBadges) {
-          ctx.textAlign = 'center';
-          for (let l = 0; l < layers.length; l++) {
-            const topPts = horizons[l];
-            const botPts = horizons[l + 1];
-            const layer = layers[l];
-
-            const midIdx = Math.floor(N * 0.48);
-            const topVal = topPts[midIdx].val;
-            const botVal = botPts[midIdx].val;
-            const midVal = (topVal + botVal) / 2;
-            const layerH = Math.abs(toY(botVal) - toY(topVal));
-
-            // Chỉ vẽ thẻ nếu tầng đủ dày (>35px)
-            if (layerH > 35) {
-              const lx = toX(topPts[midIdx].km);
-              const ly = toY(midVal);
-
-              const badgeW = Math.min(620, pW * 0.5);
-              const badgeH = layerH > 70 ? 44 : 26;
-
-              // Hộp nền mờ sang trọng
-              ctx.save();
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-              ctx.strokeStyle = '#cbd5e1';
-              ctx.lineWidth = 1.2;
-              ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
-              ctx.shadowBlur = 6;
-              ctx.fillRect(lx - badgeW / 2, ly - badgeH / 2, badgeW, badgeH);
-              ctx.strokeRect(lx - badgeW / 2, ly - badgeH / 2, badgeW, badgeH);
-              ctx.restore();
-
-              // Chữ to rõ, thoáng đãng
-              if (badgeH >= 44) {
-                ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
-                ctx.fillStyle = layer.is_target ? '#b45309' : '#1e293b';
-                ctx.fillText(layer.name, lx, ly - 4);
-
-                ctx.font = '600 12px "JetBrains Mono", monospace';
-                ctx.fillStyle = '#64748b';
-                ctx.fillText(`Độ sâu: ${Math.round(topVal)}m ~ ${Math.round(botVal)}m (Dày ~${layer.thick}m)`, lx, ly + 14);
-              } else {
-                ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-                ctx.fillStyle = layer.is_target ? '#b45309' : '#1e293b';
-                ctx.fillText(`${layer.name} [Độ sâu: ~${Math.round(topVal)}m | Dày ~${layer.thick}m]`, lx, ly + 4);
-              }
+        // Draw HUD Badges
+        if(this.cfg.badge) {
+          this.ctx.textAlign = 'center';
+          const midI = Math.floor(N/2);
+          for(let l=0; l<this.preset.layers.length; l++) {
+            const h = Math.abs(toY(hz[l+1][midI]) - toY(hz[l][midI]));
+            if(h > 40) {
+              const lx = toX(midI); const ly = toY((hz[l][midI] + hz[l+1][midI])/2);
+              this.ctx.fillStyle = this.selectedLayer === l ? 'rgba(255, 247, 237, 0.95)' : 'rgba(255, 255, 255, 0.9)';
+              this.ctx.shadowColor = 'rgba(0,0,0,0.1)'; this.ctx.shadowBlur = 8;
+              const w = 450, bh = 40;
+              this.ctx.fillRect(lx - w/2, ly - bh/2, w, bh); this.ctx.shadowBlur = 0;
+              this.ctx.strokeStyle = this.selectedLayer === l ? '#ea580c' : '#cbd5e1'; this.ctx.strokeRect(lx - w/2, ly - bh/2, w, bh);
+              
+              this.ctx.fillStyle = this.selectedLayer === l || this.preset.layers[l].target ? '#b45309' : '#0f172a';
+              this.ctx.font = 'bold 15px "Plus Jakarta Sans"';
+              this.ctx.fillText(`${this.preset.layers[l].name} (Dày ~${this.preset.layers[l].thick}m)`, lx, ly + 5);
             }
           }
         }
-
-        // 8. ĐIỂM TIÊU CỰ / ĐỈNH NÚI / GIẾNG KHOAN (ẢNH THAM KHẢO 3)
-        if (isTopography) {
-          // Cắm cờ các đỉnh cao nhất (Ngọc Linh 2598m, Bạch Mã 1221m...)
-          const peakIdx = values.indexOf(maxVal);
-          const peakKm = this.profile[peakIdx].km;
-          const px = toX(peakKm);
-          const py = toY(maxVal);
-
-          ctx.beginPath();
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 2;
-          ctx.moveTo(px, py); ctx.lineTo(px, py - 45);
-          ctx.stroke();
-
-          ctx.fillStyle = '#0f172a';
-          ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`Đỉnh Ngọc Linh (${maxVal}m)`, px, py - 52);
-
-          // Cắm các mốc sông suối
-          const minIdx = values.indexOf(minVal);
-          const minKm = this.profile[minIdx].km;
-          const rx = toX(minKm);
-          const ry = toY(minVal);
-
-          ctx.fillStyle = '#0284c7';
-          ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
-          ctx.fillText(`↓ Sông SêXan / Hồ Lắk`, rx, ry - 20);
-        } else {
-          // Cắm giếng khoan thăm dò LDT-N-1X
-          const wellKm = maxKm * 0.62;
-          const wx = toX(wellKm);
-          const wTop = toY(0) - 25;
-          const wBot = toY(-4300);
-
-          ctx.beginPath();
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 3.5;
-          ctx.moveTo(wx, wTop); ctx.lineTo(wx, wBot);
-          ctx.stroke();
-
-          // Đoạn nổ vỉa thử dầu
-          ctx.strokeStyle = '#16a34a';
-          ctx.lineWidth = 8;
-          ctx.beginPath();
-          ctx.moveTo(wx, toY(-3480)); ctx.lineTo(wx, toY(-3610));
-          ctx.stroke();
-
-          // Giàn khoan trên biển
-          ctx.fillStyle = '#475569';
-          ctx.beginPath();
-          ctx.moveTo(wx, wTop - 20); ctx.lineTo(wx - 12, wTop); ctx.lineTo(wx + 12, wTop); ctx.closePath();
-          ctx.fill();
-
-          // Thẻ nhãn giếng khoan nổi bật
-          ctx.fillStyle = '#ffffff';
-          ctx.strokeStyle = '#0284c7';
-          ctx.lineWidth = 1.5;
-          ctx.fillRect(wx - 90, wTop - 52, 180, 28);
-          ctx.strokeRect(wx - 90, wTop - 52, 180, 28);
-
-          ctx.fillStyle = '#0369a1';
-          ctx.font = 'bold 13px "JetBrains Mono", monospace';
-          ctx.textAlign = 'center';
-          ctx.fillText('📍 Giếng LDT-N-1X (Pay)', wx, wTop - 34);
-        }
-
-        // 9. VIỀN BAO & TIÊU ĐỀ BẢN VẼ CHUẨN MỰC
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(M.left, M.top, pW, pH);
-
-        // A - B hai đầu tuyến
-        ctx.font = 'bold 20px "JetBrains Mono", monospace';
-        ctx.fillStyle = '#0284c7'; ctx.textAlign = 'left';
-        ctx.fillText('A (TÂY BẮC - NW)', M.left, M.top - 20);
-
-        ctx.fillStyle = '#d946ef'; ctx.textAlign = 'right';
-        ctx.fillText('B (ĐÔNG NAM - SE)', M.left + pW, M.top - 20);
-
-        // Tiêu đề chính to rõ
-        ctx.font = '800 28px "Plus Jakarta Sans", sans-serif';
-        ctx.fillStyle = '#0f172a';
-        ctx.textAlign = 'center';
-        ctx.fillText(`MẶT CẮT CẤU TRÚC ĐỊA CHẤT & ĐỊA HÌNH 2D (TUYẾN A - B)`, W / 2, 50);
-
-        ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
-        ctx.fillStyle = '#64748b';
-        ctx.fillText(`${this.preset.name}  |  Phóng đại đứng: ${this.config.ve}x  |  Dữ liệu chuẩn Sổ tay 1`, W / 2, 80);
-
-        // Nhãn trục dọc & ngang
-        ctx.save();
-        ctx.translate(M.left - 130, M.top + pH / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
-        ctx.fillStyle = '#475569';
-        ctx.textAlign = 'center';
-        ctx.fillText(`CAO TRÌNH / ĐỘ SÂU TUYỆT ĐỐI (${this.config.unit})`, 0, 0);
-        ctx.restore();
-
-        ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
-        ctx.fillStyle = '#475569';
-        ctx.textAlign = 'center';
-        ctx.fillText('KHOẢNG CÁCH DỌC TUYẾN MẶT CẮT (km)', M.left + pW / 2, M.top + pH + 70);
       }
     }
 
-    // 5. APP CONTROLLER & SEARCH/GEO-DETECTION BINDINGS
-    document.addEventListener('DOMContentLoaded', () => {
-      const sampler = new CleanVisionSampler('map-canvas');
-      const engine = new NaturalCrossSectionEngine('cross-section-canvas');
-
-      const dropZone = document.getElementById('drop-zone');
-      const mapCanvas = document.getElementById('map-canvas');
-      const lineInfoBar = document.getElementById('line-info-bar');
-      const btnAutoDetect = document.getElementById('btn-auto-detect');
-      const inputMapFile = document.getElementById('input-map-file');
-      const badgeDetectedGeo = document.getElementById('badge-detected-geo');
-      const txtLocationStatus = document.getElementById('txt-location-status');
-      const inputLocationSearch = document.getElementById('input-location-search');
-      const btnSearchLocate = document.getElementById('btn-search-locate');
-      const strataDepthTable = document.getElementById('strata-depth-table');
-      const sectionViewTitle = document.getElementById('section-view-title');
-
-      function handleImageFile(file) {
-        if (!file || !file.type.startsWith('image/')) {
-          alert('Vui lòng chọn file hình ảnh (PNG, JPG, WEBP).');
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          sampler.loadImage(e.target.result, () => {
-            if (dropZone) dropZone.classList.add('hidden');
-            if (mapCanvas) mapCanvas.classList.remove('hidden');
-            if (lineInfoBar) lineInfoBar.classList.remove('hidden');
-            if (btnAutoDetect) btnAutoDetect.classList.remove('hidden');
-            
-            // Nhận diện từ khóa nếu tên file có chứa thông tin
-            detectLocationFromFileName(file.name);
-          });
-        };
-        reader.readAsDataURL(file);
+    // 4. CORNER 3D ISOMETRIC ENGINE (THE INSET VIEW)
+    class Corner3DEngine {
+      constructor() {
+        this.cvs = document.getElementById('isometric-canvas');
+        this.ctx = this.cvs.getContext('2d');
+        // Render ở độ phân giải hợp lý cho Inset (800x600)
+        this.cvs.width = 800; this.cvs.height = 600;
+        this.preset = DB.cuu_long;
+        this.normProfile = new Array(60).fill(0.5);
+        this.W = 400; this.D = 200;
+        this.hitZones = [];
+        this.selectedLayer = -1;
+        this.hoveredLayer = -1;
+        this._initClick();
       }
 
-      // Dropzone
-      if (dropZone) {
-        dropZone.addEventListener('click', () => inputMapFile.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-sky-500', 'bg-sky-50'); });
-        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('border-sky-500', 'bg-sky-50'); });
-        dropZone.addEventListener('drop', (e) => {
-          e.preventDefault(); dropZone.classList.remove('border-sky-500', 'bg-sky-50');
-          if (e.dataTransfer.files?.length > 0) handleImageFile(e.dataTransfer.files[0]);
+      _initClick() {
+        const getP = e => { const r=this.cvs.getBoundingClientRect(); return {x:(e.clientX-r.left)*(this.cvs.width/r.width), y:(e.clientY-r.top)*(this.cvs.height/r.height)}; };
+        this.cvs.addEventListener('mousemove', e => {
+          const pos = getP(e); let h = -1;
+          for(let i=this.hitZones.length-1; i>=0; i--) { if(this.ctx.isPointInPath(this.hitZones[i].path, pos.x, pos.y)) { h = this.hitZones[i].idx; break; } }
+          if(this.hoveredLayer !== h) { this.hoveredLayer = h; this.render(); }
+        });
+        this.cvs.addEventListener('click', e => {
+          if(this.hoveredLayer !== -1) {
+            this.selectedLayer = this.hoveredLayer; this.render();
+            sync2DSelection(this.selectedLayer);
+            openDetailedAnalysis(this.preset, this.selectedLayer);
+          }
         });
       }
-      inputMapFile.addEventListener('change', (e) => { if (e.target.files?.length > 0) handleImageFile(e.target.files[0]); });
 
-      // Clipboard Paste (Ctrl + V)
-      window.addEventListener('paste', (e) => {
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        for (const item of items) {
-          if (item.type.startsWith('image/')) {
-            handleImageFile(item.getAsFile());
-            break;
+      iso(x, y, z) {
+        const aX = Math.PI/6, aZ = 5*Math.PI/6;
+        return { x: 400 + x * Math.cos(aX) + z * Math.cos(aZ), y: 150 + y + x * Math.sin(aX) + z * Math.sin(aZ) };
+      }
+
+      drawF(pts, clr, type, idx) {
+        const path = new Path2D();
+        pts.forEach((p,i) => { const pt = this.iso(p.x,p.y,p.z); if(i===0) path.moveTo(pt.x,pt.y); else path.lineTo(pt.x,pt.y); });
+        path.closePath();
+        let c = clr;
+        if(type==='left') c = shade(clr, -25); if(type==='top') c = shade(clr, 15);
+        if(this.selectedLayer === idx) c = shade(c, 30); else if(this.hoveredLayer === idx) c = shade(c, 15);
+        this.ctx.fillStyle = c; this.ctx.fill(path);
+        this.ctx.strokeStyle = this.selectedLayer === idx ? '#fff' : shade(clr, -40);
+        this.ctx.lineWidth = type==='front' ? 1.5 : 0.8; this.ctx.stroke(path);
+        this.hitZones.push({path, idx});
+      }
+
+      render() {
+        this.ctx.clearRect(0,0,800,600);
+        this.hitZones = [];
+        const pMin = this.preset.rMin, pMax = this.preset.rMax;
+        const H = 250 * 2.0; // VE = 2.0 for 3D block
+        const N = this.normProfile.length;
+        const dx = this.W / (N-1);
+        const hz = [];
+        for(let l=0; l<=this.preset.layers.length; l++) hz.push([]);
+
+        const isTopo = this.preset.id === 'continental_mountain';
+        for(let i=0; i<N; i++) {
+          const x = i*dx; const refVal = pMax - this.normProfile[i] * (pMax - pMin);
+          if(isTopo) {
+            let cur = refVal; hz[0].push({x, y: H * (pMax - cur)/(pMax - pMin)});
+            for(let l=0; l<this.preset.layers.length; l++) { cur -= this.preset.layers[l].thick; hz[l+1].push({x, y: H * (pMax - Math.max(cur, pMin))/(pMax - pMin)}); }
+          } else {
+            hz[0].push({x, y: 0}); let cur = -this.preset.layers[0].thick; hz[1].push({x, y: H * (pMax - cur)/(pMax - pMin)});
+            for(let l=1; l<this.preset.layers.length; l++) { cur -= this.preset.layers[l].thick * (1 + this.normProfile[i]*0.2); hz[l+1].push({x, y: H * (pMax - Math.max(cur, pMin))/(pMax - pMin)}); }
           }
         }
-      });
 
-      // Line change callback
-      sampler.onLineChange = (profile) => {
-        engine.setProfile(profile);
-        const badge = document.getElementById('line-length-badge');
-        if (badge) badge.textContent = `${sampler.scaleKm.toFixed(1)} km`;
+        // Draw 3D
+        for(let l = this.preset.layers.length-1; l>=0; l--) {
+          const tP = hz[l], bP = hz[l+1], clr = this.preset.layers[l].c;
+          if(this.preset.layers[l].type !== 'water') {
+            this.drawF([ {x:0, y:tP[0].y, z:this.D}, {x:0, y:tP[0].y, z:0}, {x:0, y:bP[0].y, z:0}, {x:0, y:bP[0].y, z:this.D} ], clr, 'left', l);
+          }
+          const fP = []; for(let i=0; i<N; i++) fP.push({x: tP[i].x, y: tP[i].y, z:0}); for(let i=N-1; i>=0; i--) fP.push({x: bP[i].x, y: bP[i].y, z:0});
+          this.drawF(fP, clr, 'front', l);
+        }
+
+        const tP = []; for(let i=0; i<N; i++) tP.push({x: hz[0][i].x, y: hz[0][i].y, z: this.D}); for(let i=N-1; i>=0; i--) tP.push({x: hz[0][i].x, y: hz[0][i].y, z: 0});
+        this.drawF(tP, isTopo?'#22c55e':'#38bdf8', 'top', 0);
+      }
+    }
+
+    // 5. SYNCHRONIZATION & APP CONTROLLER
+    let engine2D, engine3D, vision;
+    
+    function sync3DSelection(idx) { engine3D.selectedLayer = idx; engine3D.render(); }
+    function sync2DSelection(idx) { engine2D.selectedLayer = idx; engine2D.render(); }
+
+    function openDetailedAnalysis(preset, layerIndex) {
+      const drawer = document.getElementById('analysis-drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      const content = document.getElementById('drawer-content');
+      const layer = preset.layers[layerIndex];
+      const details = layer.details;
+
+      content.innerHTML = `
+        <div class="space-y-1">
+          <div class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${layer.target ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-500 border-slate-200'}">
+            ${layer.target ? 'MỤC TIÊU DẦU KHÍ CHÍNH' : 'PHÂN TẦNG ĐỊA CHẤT'}
+          </div>
+          <h3 class="text-2xl font-extrabold text-slate-900 leading-tight">${layer.name}</h3>
+        </div>
+        <div class="grid grid-cols-2 gap-3 pb-4 border-b border-slate-100">
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-2"><span class="w-5 h-5 rounded shadow-inner" style="background-color: ${layer.c}"></span><span class="font-mono text-xs font-bold text-slate-700">${layer.c.toUpperCase()}</span></div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Bề dày chuẩn</span><span class="font-mono text-lg font-bold text-sky-700">~${layer.thick} m</span></div>
+        </div>
+        <div class="space-y-4">
+          <div><h4 class="text-xs font-bold uppercase text-slate-500 flex items-center gap-1.5 mb-1.5"><i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> Tuổi Địa chất</h4><p class="text-sm font-semibold text-slate-800 bg-sky-50/50 p-2.5 rounded-lg border border-sky-100/50 leading-relaxed">${details.age}</p></div>
+          <div><h4 class="text-xs font-bold uppercase text-slate-500 flex items-center gap-1.5 mb-1.5"><i data-lucide="sun" class="w-4 h-4 text-slate-400"></i> Môi trường Trầm tích</h4><p class="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg leading-relaxed">${details.env}</p></div>
+          <div><h4 class="text-xs font-bold uppercase text-slate-500 flex items-center gap-1.5 mb-1.5"><i data-lucide="microscope" class="w-4 h-4 text-slate-400"></i> Đặc điểm Thạch học</h4><p class="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg leading-relaxed border-l-2 border-slate-300 pl-3">${details.litho}</p></div>
+          <div><h4 class="text-xs font-bold uppercase text-slate-500 flex items-center gap-1.5 mb-1.5"><i data-lucide="target" class="w-4 h-4 text-amber-500"></i> Vai trò Kỹ thuật</h4><div class="bg-amber-50 p-3 rounded-lg border border-amber-200"><p class="text-sm font-medium text-amber-900 leading-relaxed">${details.role}</p></div></div>
+        </div>
+        
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <h4 class="text-[11px] font-bold uppercase text-slate-400 mb-2 flex items-center gap-1.5">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Nguồn kiểm chứng (References)
+          </h4>
+          <ul class="space-y-2">
+            ${(preset.refs || []).map(ref => `
+              <li>
+                <a href="${ref.url}" target="_blank" rel="noopener noreferrer" class="group flex items-start gap-2 p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition">
+                  <i data-lucide="link" class="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 mt-0.5 shrink-0"></i>
+                  <span class="text-xs text-slate-600 group-hover:text-sky-700 font-medium leading-relaxed">${ref.text}</span>
+                </a>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+        <div class="pt-6 pb-2">
+          <p class="text-[10px] text-center text-slate-400 italic">Trích xuất tự động từ Cơ sở dữ liệu Chuyên gia (Sổ tay 1)</p>
+        </div>
+      `;
+      lucide.createIcons();
+      drawer.classList.remove('translate-x-full'); overlay.classList.remove('hidden');
+    }
+
+    function closeDetailedAnalysis() {
+      document.getElementById('analysis-drawer').classList.add('translate-x-full');
+      document.getElementById('drawer-overlay').classList.add('hidden');
+      engine2D.selectedLayer = -1; engine3D.selectedLayer = -1;
+      engine2D.render(); engine3D.render();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      vision = new AutoVisionSampler();
+      engine2D = new Main2DEngine();
+      engine3D = new Corner3DEngine();
+
+      const setPreset = (k) => {
+        const p = DB[k] || DB.cuu_long;
+        engine2D.preset = p; engine3D.preset = p;
+        engine2D.selectedLayer = -1; engine3D.selectedLayer = -1;
+        document.getElementById('badge-location').textContent = `📍 ${p.name}`;
+        engine2D.render(); engine3D.render();
       };
 
-      if (btnAutoDetect) {
-        btnAutoDetect.addEventListener('click', () => {
-          sampler.autoAlignLine();
-          sampler.redraw();
-          if (sampler.onLineChange) sampler.onLineChange(sampler.sampleProfile());
+      // Quick Search
+      const btnS = document.getElementById('btn-search-locate');
+      const inpS = document.getElementById('input-location-search');
+      btnS.addEventListener('click', () => {
+        const q = inpS.value.toLowerCase();
+        if(q.includes('ngọc linh') || q.includes('tây nguyên') || q.includes('núi') || q.includes('lâm đồng') || q.includes('đà lạt')) setPreset('continental_mountain');
+        else if(q.includes('nam côn sơn') || q.includes('lan tây') || q.includes('hải thạch')) setPreset('nam_con_son');
+        else if(q.includes('sông hồng') || q.includes('bắc bộ') || q.includes('hải phòng') || q.includes('tiền hải')) setPreset('song_hong');
+        else if(q.includes('mê kông') || q.includes('đồng bằng') || q.includes('cà mau') || q.includes('cửu long (sông)')) setPreset('alluvial_water');
+        else if(q.includes('phú quốc') || q.includes('thổ chu')) setPreset('phu_quoc');
+        else setPreset('cuu_long'); // Default Bạch Hổ
+      });
+
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.preset-btn').forEach(btn => btn.className = 'preset-btn bg-slate-100 text-slate-700 border-slate-200 border px-3 py-1 rounded-full text-[11px] shrink-0');
+          b.className = 'preset-btn active bg-sky-100 text-sky-800 border-sky-300 border font-bold px-3 py-1 rounded-full text-[11px] shrink-0';
+          setPreset(b.getAttribute('data-preset'));
         });
-      }
+      });
 
-      // BỘ TÌM KIẾM ĐỊA ĐIỂM PHONG CÁCH GOOGLE EARTH
-      function performLocationSearch(query) {
-        if (!query) return;
-        const q = query.toLowerCase().trim();
-        let matchedKey = 'cuu_long';
+      vision.onUpdate = (prof) => { 
+        engine2D.normProfile = prof; engine2D.render(); 
+        engine3D.normProfile = prof; engine3D.render(); 
+      };
 
-        if (q.includes('ngọc linh') || q.includes('tây nguyên') || q.includes('bạch mã') || q.includes('đồi núi') || q.includes('núi') || q.includes('sapa') || q.includes('fansipan') || q.includes('buôn ma') || q.includes('dem')) {
-          matchedKey = 'continental_mountain';
-        } else if (q.includes('nam côn sơn') || q.includes('hải thạch') || q.includes('mộc tinh') || q.includes('đại hùng')) {
-          matchedKey = 'nam_con_son';
-        } else if (q.includes('sông hồng') || q.includes('hàm rồng') || q.includes('vịnh bắc bộ') || q.includes('thái bình')) {
-          matchedKey = 'song_hong';
-        } else if (q.includes('phú quốc') || q.includes('hà tiên') || q.includes('kiên giang') || q.includes('vịnh thái lan')) {
-          matchedKey = 'phu_quoc';
-        } else if (q.includes('đồng bằng') || q.includes('châu thổ') || q.includes('mê kông') || q.includes('nước ngầm')) {
-          matchedKey = 'alluvial_water';
-        } else {
-          matchedKey = 'cuu_long';
+      document.getElementById('slider-ve').addEventListener('input', e => {
+        const v = parseFloat(e.target.value);
+        document.getElementById('val-ve').textContent = v.toFixed(1) + 'x';
+        engine2D.cfg.ve = v; engine2D.render();
+      });
+
+      ['tex', 'badges', 'water', 'oil'].forEach(k => {
+        document.getElementById('chk-'+k).addEventListener('change', e => { 
+          engine2D.cfg[k] = e.target.checked; engine2D.render(); 
+        });
+      });
+
+      document.getElementById('input-map-file').addEventListener('change', e => {
+        if(e.target.files.length) {
+          document.getElementById('drop-zone').style.display = 'none';
+          document.getElementById('map-canvas').style.display = 'block';
+          vision.load(URL.createObjectURL(e.target.files[0]));
         }
-
-        switchPreset(matchedKey);
-      }
-
-      function detectLocationFromFileName(fileName) {
-        if (!fileName) return;
-        performLocationSearch(fileName);
-      }
-
-      btnSearchLocate.addEventListener('click', () => performLocationSearch(inputLocationSearch.value));
-      inputLocationSearch.addEventListener('keypress', (e) => { if (e.key === 'Enter') performLocationSearch(inputLocationSearch.value); });
-
-      // Quick Pill Buttons
-      document.querySelectorAll('.quick-pill-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const key = btn.getAttribute('data-quick-preset');
-          switchPreset(key);
-        });
       });
 
-      const inputMax = document.getElementById('input-range-max');
-      const inputMin = document.getElementById('input-range-min');
-      const selectUnit = document.getElementById('select-unit');
-      const owcContainer = document.getElementById('owc-container');
-      const boxToggleOil = document.getElementById('box-toggle-oil');
+      document.getElementById('btn-close-drawer').addEventListener('click', closeDetailedAnalysis);
+      document.getElementById('drawer-overlay').addEventListener('click', closeDetailedAnalysis);
 
-      function switchPreset(key) {
-        const preset = GEOLOGY_DATABASE[key];
-        if (!preset) return;
-
-        engine.setPreset(preset);
-        txtLocationStatus.textContent = preset.location;
-        sectionViewTitle.textContent = `Mặt cắt Cấu trúc: ${preset.name}`;
-
-        // Cập nhật giao diện nút bấm
-        document.querySelectorAll('.quick-pill-btn').forEach(b => {
-          if (b.getAttribute('data-quick-preset') === key) {
-            b.className = 'quick-pill-btn pill-btn active bg-sky-100 text-sky-800 border border-sky-300 font-bold px-3 py-1 rounded-full text-[11px] shrink-0';
-          } else {
-            b.className = 'quick-pill-btn pill-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-[11px] shrink-0';
-          }
-        });
-
-        // Range inputs
-        inputMax.value = preset.default_range.max;
-        inputMin.value = preset.default_range.min;
-        selectUnit.value = preset.default_unit || 'm';
-        sampler.setRange(preset.default_range.max, preset.default_range.min, preset.default_unit || 'm');
-
-        const isTopo = preset.id === 'continental_mountain';
-        if (owcContainer) owcContainer.style.display = isTopo ? 'none' : 'block';
-        if (boxToggleOil) boxToggleOil.style.display = isTopo ? 'none' : 'flex';
-
-        renderDepthTable(preset);
-      }
-
-      function renderDepthTable(preset) {
-        if (!strataDepthTable) return;
-        let html = `
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                <th class="p-2">Tên Phân vị Địa tầng</th>
-                <th class="p-2">Mô tả Thạch học / Vai trò</th>
-                <th class="p-2 text-center">Độ sâu Danh định</th>
-                <th class="p-2 text-center">Bề dày chuẩn</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-        `;
-
-        preset.layers.forEach(l => {
-          html += `
-            <tr class="${l.is_target ? 'bg-amber-50/70 font-semibold' : 'hover:bg-slate-50'}">
-              <td class="p-2 flex items-center gap-2">
-                <span class="w-3.5 h-3.5 rounded-sm border ${l.is_target ? 'border-amber-600 border-2' : 'border-slate-300'}" style="background-color: ${l.color}"></span>
-                <span class="${l.is_target ? 'text-amber-900 font-bold' : 'text-slate-800'}">${l.name}</span>
-              </td>
-              <td class="p-2 text-slate-600">${l.role} <span class="text-slate-400 font-mono text-[10px]">(${l.sub})</span></td>
-              <td class="p-2 font-mono text-center text-slate-700">${l.top}m ~ ${l.bot}m</td>
-              <td class="p-2 font-mono text-center font-bold text-sky-700">~${l.thick} m</td>
-            </tr>
-          `;
-        });
-
-        html += `</tbody></table>`;
-        strataDepthTable.innerHTML = html;
-      }
-
-      // Range change listeners
-      function updateRange() {
-        const mx = parseFloat(inputMax.value) || 0;
-        const mn = parseFloat(inputMin.value) || -5000;
-        const u = selectUnit.value;
-        sampler.setRange(mx, mn, u);
-        engine.config.unit = u;
-        engine.render();
-      }
-      inputMax.addEventListener('change', updateRange);
-      inputMin.addEventListener('change', updateRange);
-      selectUnit.addEventListener('change', updateRange);
-
-      // Sliders
-      const sliderVe = document.getElementById('slider-ve');
-      const valVe = document.getElementById('val-ve');
-      sliderVe.addEventListener('input', (e) => {
-        valVe.textContent = `${parseFloat(e.target.value).toFixed(1)}x`;
-        engine.updateConfig({ ve: parseFloat(e.target.value) });
-      });
-
-      const sliderOwc = document.getElementById('slider-owc');
-      const valOwc = document.getElementById('val-owc');
-      sliderOwc.addEventListener('input', (e) => {
-        const v = -parseInt(e.target.value);
-        valOwc.textContent = `${v} m`;
-        engine.updateConfig({ owc: v });
-      });
-
-      // Checkbox toggles
-      document.getElementById('chk-show-textures').addEventListener('change', (e) => engine.updateConfig({ showTextures: e.target.checked }));
-      document.getElementById('chk-show-depth-badges').addEventListener('change', (e) => engine.updateConfig({ showDepthBadges: e.target.checked }));
-      document.getElementById('chk-show-faults').addEventListener('change', (e) => engine.updateConfig({ showFaults: e.target.checked }));
-      document.getElementById('chk-show-oil').addEventListener('change', (e) => engine.updateConfig({ showOil: e.target.checked }));
-
-      // Fullscreen Toggle
-      document.getElementById('btn-toggle-fullscreen').addEventListener('click', () => {
-        const el = document.getElementById('cross-section-canvas');
-        if (el.requestFullscreen) el.requestFullscreen();
-        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-      });
-
-      // Export PNG
-      document.getElementById('btn-export-png').addEventListener('click', () => {
-        const link = document.createElement('a');
-        link.download = `GeoStrata_Natural_Section_${engine.preset.id}.png`;
-        link.href = engine.canvas.toDataURL('image/png', 1.0);
-        link.click();
-      });
-
-      // Init Default
-      switchPreset('cuu_long');
+      setPreset('cuu_long');
       lucide.createIcons();
     });
   </script>
